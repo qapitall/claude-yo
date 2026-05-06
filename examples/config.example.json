@@ -1,0 +1,21 @@
+{
+  "ntfy": {
+    "topic": "claude-watch-xyz123",
+    "server": "https://ntfy.sh",
+    "authToken": null
+  },
+  "filters": {
+    "minDurationSeconds": 30,
+    "events": ["Stop", "Notification"]
+  },
+  "quietHours": {
+    "enabled": false,
+    "start": "23:00",
+    "end": "08:00",
+    "allowHighPriority": true
+  },
+  "summary": {
+    "maxLength": 100,
+    "includeProjectName": true
+  }
+}
