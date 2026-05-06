@@ -89,8 +89,9 @@ test('run: dry-run prints request to stdout, does not send', async () => {
   assert.equal(r.reason, 'dry-run');
   const printed = out.read();
   const obj = JSON.parse(printed);
-  assert.equal(obj.url, 'https://ntfy.sh/test-topic');
-  assert.equal(obj.headers.Title, '✓ myapp - Task done');
+  assert.equal(obj.url, 'https://ntfy.sh/');
+  assert.equal(obj.body.topic, 'test-topic');
+  assert.equal(obj.body.title, '✓ myapp - Task done');
 });
 
 test('run: in quiet hours blocks low-priority Stop', async () => {

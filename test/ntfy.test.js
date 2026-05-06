@@ -7,7 +7,11 @@ import {
   redactRequest,
 } from '../src/ntfy.js';
 
-test('buildRequest: builds correct URL, headers, body', () => {
+function parseBody(req) {
+  return JSON.parse(req.body);
+}
+
+test('buildRequest: posts JSON to server root with topic in body', () => {
   const req = buildRequest(
     { topic: 'claude-watch-abc', server: 'https://ntfy.sh' },
     {
@@ -17,12 +21,24 @@ test('buildRequest: builds correct URL, headers, body', () => {
       tags: ['robot', 'white_check_mark'],
     },
   );
-  assert.equal(req.url, 'https://ntfy.sh/claude-watch-abc');
+  assert.equal(req.url, 'https://ntfy.sh/');
   assert.equal(req.method, 'POST');
-  assert.equal(req.headers.Title, 'Hello');
-  assert.equal(req.headers.Priority, 'high');
-  assert.equal(req.headers.Tags, 'robot,white_check_mark');
-  assert.equal(req.body, 'World');
+  assert.equal(req.headers['Content-Type'], 'application/json');
+  const payload = parseBody(req);
+  assert.equal(payload.topic, 'claude-watch-abc');
+  assert.equal(payload.title, 'Hello');
+  assert.equal(payload.message, 'World');
+  assert.equal(payload.priority, 4);
+  assert.deepEqual(payload.tags, ['robot', 'white_check_mark']);
+});
+
+test('buildRequest: Unicode characters in title survive (regression: U+2713)', () => {
+  const req = buildRequest(
+    { topic: 't' },
+    { title: '✓ done', body: 'ok', priority: 'default', tags: [] },
+  );
+  const payload = parseBody(req);
+  assert.equal(payload.title, '✓ done');
 });
 
 test('buildRequest: strips trailing slashes from server', () => {
@@ -30,12 +46,12 @@ test('buildRequest: strips trailing slashes from server', () => {
     { topic: 't', server: 'https://example.com///' },
     { body: 'x' },
   );
-  assert.equal(req.url, 'https://example.com/t');
+  assert.equal(req.url, 'https://example.com/');
 });
 
 test('buildRequest: defaults to ntfy.sh', () => {
   const req = buildRequest({ topic: 't' }, { body: 'x' });
-  assert.equal(req.url, 'https://ntfy.sh/t');
+  assert.equal(req.url, 'https://ntfy.sh/');
 });
 
 test('buildRequest: adds Authorization header when authToken present', () => {
@@ -50,13 +66,29 @@ test('buildRequest: throws when topic missing', () => {
   assert.throws(() => buildRequest({}, { body: 'x' }), /topic is required/);
 });
 
-test('buildRequest: sanitizes Title against CRLF injection', () => {
+test('buildRequest: sanitizes title against CRLF injection', () => {
   const req = buildRequest(
     { topic: 't' },
     { title: 'evil\r\nX-Inject: 1', body: '' },
   );
-  assert.ok(!req.headers.Title.includes('\r'));
-  assert.ok(!req.headers.Title.includes('\n'));
+  const payload = parseBody(req);
+  assert.ok(!payload.title.includes('\r'));
+  assert.ok(!payload.title.includes('\n'));
+});
+
+test('buildRequest: maps priority names to numbers', () => {
+  const cases = [
+    ['min', 1],
+    ['low', 2],
+    ['default', 3],
+    ['high', 4],
+    ['urgent', 5],
+    ['max', 5],
+  ];
+  for (const [name, num] of cases) {
+    const r = buildRequest({ topic: 't' }, { body: 'x', priority: name });
+    assert.equal(parseBody(r).priority, num, `priority ${name}`);
+  }
 });
 
 test('send: succeeds with mocked fetch', async () => {
@@ -72,9 +104,11 @@ test('send: succeeds with mocked fetch', async () => {
   );
   assert.equal(r.ok, true);
   assert.equal(r.status, 200);
-  assert.equal(captured.url, 'https://ntfy.sh/abc');
+  assert.equal(captured.url, 'https://ntfy.sh/');
   assert.equal(captured.init.method, 'POST');
-  assert.equal(captured.init.body, 'hi');
+  const payload = JSON.parse(captured.init.body);
+  assert.equal(payload.topic, 'abc');
+  assert.equal(payload.message, 'hi');
 });
 
 test('send: returns ok:false on non-2xx without throwing', async () => {
@@ -142,8 +176,20 @@ test('redactRequest: redacts Authorization header', () => {
     url: 'x',
     method: 'POST',
     headers: { Authorization: 'Bearer s' },
-    body: '',
+    body: JSON.stringify({ topic: 't' }),
   };
   const r = redactRequest(req);
   assert.equal(r.headers.Authorization, '[REDACTED]');
+});
+
+test('redactRequest: parses JSON body for readable display', () => {
+  const req = {
+    url: 'x',
+    method: 'POST',
+    headers: {},
+    body: JSON.stringify({ topic: 't', message: 'hi' }),
+  };
+  const r = redactRequest(req);
+  assert.equal(typeof r.body, 'object');
+  assert.equal(r.body.topic, 't');
 });
