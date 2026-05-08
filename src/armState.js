@@ -1,4 +1,4 @@
-import { readFile, writeFile, unlink, stat } from 'node:fs/promises';
+import { readFile, writeFile, unlink, stat, chmod } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
@@ -11,6 +11,9 @@ export async function arm(message = '', path = DEFAULT_ARM_PATH) {
     2,
   );
   await writeFile(path, payload + '\n', 'utf8');
+  // Other local users shouldn't be able to read user-supplied arm messages
+  // (no-op on Windows; safe to ignore failures).
+  await chmod(path, 0o600).catch(() => {});
   return path;
 }
 

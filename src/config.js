@@ -45,10 +45,17 @@ function isPlainObject(v) {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
 }
 
+// Keys we refuse to merge from user input. JSON.parse treats `__proto__`,
+// `constructor`, and `prototype` as regular own properties, but assigning
+// them with `out[k] = …` may walk the prototype chain on some engines and
+// pollute Object.prototype globally. Drop them up-front.
+const PROTO_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
 function deepMerge(base, override) {
   if (!isPlainObject(override)) return base;
   const out = { ...base };
   for (const [k, v] of Object.entries(override)) {
+    if (PROTO_KEYS.has(k)) continue;
     if (isPlainObject(v) && isPlainObject(base[k])) {
       out[k] = deepMerge(base[k], v);
     } else if (v !== undefined) {

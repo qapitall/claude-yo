@@ -27,6 +27,12 @@ export function validateConfig(c) {
   if (typeof c.server !== 'string' || c.server === '') {
     return { ok: false, reason: 'ntfy.server is required' };
   }
+  if (!/^https?:\/\//i.test(c.server)) {
+    return {
+      ok: false,
+      reason: 'ntfy.server must start with http:// or https://',
+    };
+  }
   return { ok: true };
 }
 

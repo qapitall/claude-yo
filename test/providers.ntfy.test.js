@@ -21,6 +21,17 @@ test('ntfy.validateConfig: accepts valid config', () => {
   assert.equal(r.ok, true);
 });
 
+test('ntfy.validateConfig: rejects non-http(s) server scheme', () => {
+  const r = ntfy.validateConfig({ topic: 't', server: 'file:///etc/passwd' });
+  assert.equal(r.ok, false);
+  assert.match(r.reason, /http/);
+});
+
+test('ntfy.validateConfig: accepts http server (self-host)', () => {
+  const r = ntfy.validateConfig({ topic: 't', server: 'http://localhost:8080' });
+  assert.equal(r.ok, true);
+});
+
 test('ntfy.buildRequest: posts JSON to server root with topic in body', () => {
   const req = ntfy.buildRequest(
     { topic: 'claude-watch-abc', server: 'https://ntfy.sh' },

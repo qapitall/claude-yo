@@ -10,6 +10,17 @@ const PROVIDERS = {
 
 const DEFAULT_TIMEOUT_MS = 5000;
 
+// Defense-in-depth: redact provider secrets that may appear inside fetch
+// error messages (e.g. when a connection error string includes the URL).
+// Per-provider redactRequest only handles the structured request object.
+function redactErrorMessage(message) {
+  if (!message || typeof message !== 'string') return message;
+  return message
+    .replace(/\/bot\d+:[A-Za-z0-9_-]+\//g, '/bot[REDACTED]/')
+    .replace(/(\/api\/webhooks\/\d+\/)[A-Za-z0-9_-]+/g, '$1[REDACTED]')
+    .replace(/Bearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED]');
+}
+
 export function getProvider(name) {
   if (!name) return PROVIDERS.ntfy;
   return PROVIDERS[name] ?? null;
@@ -70,10 +81,13 @@ export async function send(
     }
     return { ok: true, status: res.status };
   } catch (err) {
+    const raw = err?.name === 'AbortError'
+      ? 'timeout'
+      : (err?.message ?? 'error');
     return {
       ok: false,
       status: 0,
-      error: err?.name === 'AbortError' ? 'timeout' : (err?.message ?? 'error'),
+      error: redactErrorMessage(raw),
     };
   } finally {
     clearTimeout(timer);

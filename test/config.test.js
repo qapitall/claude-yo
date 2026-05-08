@@ -83,3 +83,33 @@ test('validateConfig: rejects when ntfy section missing', () => {
   assert.equal(r.ok, false);
 });
 
+test('loadConfig: __proto__ key in config does not pollute Object.prototype', async () => {
+  await withTempDir(async (dir) => {
+    const p = join(dir, 'cfg.json');
+    await writeFile(
+      p,
+      JSON.stringify({
+        ntfy: { topic: 't', server: 'https://ntfy.sh' },
+        __proto__: { polluted: 'YES' },
+      }),
+    );
+    await loadConfig(p);
+    assert.equal({}.polluted, undefined, 'Object.prototype was polluted');
+  });
+});
+
+test('loadConfig: nested constructor key is dropped', async () => {
+  await withTempDir(async (dir) => {
+    const p = join(dir, 'cfg.json');
+    await writeFile(
+      p,
+      JSON.stringify({
+        ntfy: { topic: 't', server: 'https://ntfy.sh', constructor: 'evil' },
+      }),
+    );
+    const r = await loadConfig(p);
+    assert.equal(r.ok, true);
+    assert.notEqual(r.config.ntfy.constructor, 'evil');
+  });
+});
+
