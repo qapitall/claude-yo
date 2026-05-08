@@ -3,15 +3,15 @@ import * as providers from './providers.js';
 
 const TEST_NOTIFICATION = {
   title: '✓ claude-watch-notify - Test successful',
-  body: 'If you see this on your watch, the bridge works.',
+  body: 'If you see this, the bridge works.',
   priority: 'default',
   tags: ['white_check_mark', 'robot'],
 };
 
-const TROUBLESHOOTING = `If it doesn't appear on your watch, check:
-  1. The notification provider's app is installed and signed in on your phone.
-  2. Your phone's smartwatch companion app allows that app's notifications to mirror to the watch.
-  3. Notifications are enabled on the watch for that app.
+const TROUBLESHOOTING = `If it doesn't arrive on the device you expected:
+  1. The notification provider's app is installed and signed in on that device.
+  2. Notifications are enabled for that app on that device (no Do Not Disturb).
+  3. If forwarding to another device, that device's mirroring rules allow this app.
 `;
 
 export async function runTest({ dryRun = false } = {}) {

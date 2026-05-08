@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { DEFAULT_CONFIG, DEFAULT_CONFIG_PATH, saveConfig } from './config.js';
 
 function suggestTopic() {
-  return 'claude-watch-' + randomBytes(8).toString('hex');
+  return 'cwn-' + randomBytes(8).toString('hex');
 }
 
 async function ask(rl, prompt, defaultValue) {
@@ -111,30 +111,29 @@ function postInstallHints(provider, providerCfg, mode = 'on-demand') {
   output.write('\nNext steps:\n');
   if (provider === 'ntfy') {
     const url = `${providerCfg.server.replace(/\/+$/, '')}/${providerCfg.topic}`;
-    output.write(`  1. Install the ntfy app on your phone: https://ntfy.sh/app\n`);
-    output.write(`  2. Subscribe to your topic — open this URL on your phone:\n`);
+    output.write(`  1. Install the ntfy app: https://ntfy.sh/app\n`);
+    output.write(`  2. Subscribe to your topic — open this URL on your device:\n`);
     output.write(`       ${url}\n`);
     output.write(
       `     The link opens the ntfy app (if installed) and prompts to subscribe.\n`,
     );
   } else if (provider === 'discord') {
     output.write(
-      `  1. Notifications will appear in the Discord channel that owns the webhook.\n`,
+      `  1. Notifications will appear in the Discord channel that owns the webhook,\n` +
+        `     on every device signed in to that account.\n`,
     );
     output.write(
-      `  2. Make sure Discord is allowed to send notifications on your phone.\n`,
+      `  2. Make sure notifications are enabled for Discord on that device.\n`,
     );
   } else if (provider === 'telegram') {
     output.write(
-      `  1. Notifications will appear in the Telegram chat with your bot.\n`,
+      `  1. Notifications will appear in the Telegram chat with your bot,\n` +
+        `     on every device signed in to that account.\n`,
     );
     output.write(
-      `  2. Make sure Telegram is allowed to send notifications on your phone.\n`,
+      `  2. Make sure notifications are enabled for Telegram on that device.\n`,
     );
   }
-  output.write(
-    `  3. Confirm your watch's companion app mirrors that app's notifications (see README "Smartwatch setup").\n`,
-  );
   if (mode === 'on-demand') {
     output.write(
       `  4. Install the on-demand skill so Claude can ping you when you ask:\n`,

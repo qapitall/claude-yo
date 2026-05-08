@@ -1,13 +1,12 @@
 ---
 name: notify-on-demand
-description: Send a push notification to the user's smartwatch via claude-watch-notify when they explicitly ask to be pinged, notified, or alerted when a task finishes. Trigger phrases include "ping me", "notify me when done", "let me know when this finishes", "alert me", and Turkish equivalents like "bitince haber ver", "tamam olunca bildir", "haber et".
+description: Send a push notification via claude-watch-notify when the user explicitly asks to be pinged, notified, or alerted when a task finishes. Trigger phrases include "ping me", "notify me when done", "let me know when this finishes", "alert me", and Turkish equivalents like "bitince haber ver", "tamam olunca bildir", "haber et".
 ---
 
 # Notify on demand
 
-This skill sends a one-shot push notification to the user's smartwatch through
-the `claude-watch-notify` CLI. **Use it only when the user explicitly asks** to
-be pinged.
+This skill sends a one-shot push notification through the `claude-watch-notify`
+CLI. **Use it only when the user explicitly asks** to be pinged.
 
 ## When to invoke
 

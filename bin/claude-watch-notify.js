@@ -52,7 +52,7 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  process.stdout.write(`claude-watch-notify - smartwatch notifications for Claude Code
+  process.stdout.write(`claude-watch-notify - push notifications for Claude Code
 
 Usage:
   claude-watch-notify setup                 One-shot init + (skill or hooks) + test

@@ -168,7 +168,7 @@ export async function runDoctor({ skipSend = false } = {}) {
   );
   if (allOk) {
     process.stdout.write(
-      `\nIf your watch isn't getting notifications, see README "Smartwatch setup" for your watch brand.\n`,
+      `\nIf the notification didn't reach the device you expected, that's a provider-app setting on that device (notification permission, Do Not Disturb, mirroring rules) — see README "Troubleshooting".\n`,
     );
   }
   return allOk ? 0 : 1;

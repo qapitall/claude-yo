@@ -1,7 +1,7 @@
 {
   "name": "claude-watch-notify",
   "version": "0.1.0",
-  "description": "Push notifications to your smartwatch when Claude Code finishes a task. Works with Apple Watch, Wear OS, Garmin, Huawei, Galaxy Watch, Fitbit, and more.",
+  "description": "Push notifications when Claude Code finishes a task. Sends via ntfy, Discord, or Telegram — only when you ask for it.",
   "type": "module",
   "bin": {
     "claude-watch-notify": "./bin/claude-watch-notify.js"
@@ -25,15 +25,12 @@
     "claude",
     "claude-code",
     "ntfy",
+    "discord",
+    "telegram",
     "notifications",
-    "smartwatch",
-    "wearable",
-    "apple-watch",
-    "wear-os",
-    "garmin",
-    "huawei",
-    "fitbit",
-    "hooks"
+    "push",
+    "hooks",
+    "cli"
   ],
   "license": "MIT",
   "repository": {

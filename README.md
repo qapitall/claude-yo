@@ -1,6 +1,6 @@
 # claude-watch-notify
 
-Get a notification on your smartwatch when Claude Code finishes a task — but only when you ask for it.
+Get a push notification when Claude Code finishes a task — but only when you ask for it.
 
 ## Quick start
 
@@ -18,7 +18,7 @@ After that, in any Claude Code conversation just say:
 
 > "Run the test suite and **ping me when it's done**."
 
-Claude finishes the work, runs `claude-watch-notify ping` once, and your watch buzzes. No notification on every short reply.
+Claude finishes the work, runs `claude-watch-notify ping` once, and you get a notification. No notification on every short reply.
 
 If something doesn't work, run `claude-watch-notify doctor` for a green/red checklist.
 
@@ -32,46 +32,25 @@ If something doesn't work, run `claude-watch-notify doctor` for a green/red chec
 
 Switch any time with `claude-watch-notify mode <on-demand|armed|always>`.
 
-## Why?
-
-Long Claude Code tasks leave you wondering whether they're done. You don't want to babysit the terminal. This CLI hooks into Claude Code's `Stop` and `Notification` events, sends a push to one of three providers, and your phone mirrors that push to whichever smartwatch you wear.
-
-```
-Claude Code hook → stdin (JSON) → CLI → HTTP POST → provider → phone → watch
-```
-
-The bridge is **device-agnostic**. There is no watch-specific code in this project. The phone does the mirroring; the watch just shows the notification.
-
 ## Pick a provider
 
-| Provider | New app on phone? | Setup time | Best for |
-|---|---|---|---|
-| **ntfy** (default) | yes (free, FOSS) | ~3 min | clean dedicated channel, self-hostable |
-| **Telegram** | no, if you already use Telegram | ~3 min | "I don't want a new app" |
-| **Discord** | no, if you already use Discord | ~1 min | shortest setup, no bot needed |
+| Provider | Setup time | Notes |
+|---|---|---|
+| **ntfy** (default) | ~3 min | Free, FOSS, self-hostable. Needs the ntfy app on your phone (or browser/desktop subscription). |
+| **Telegram** | ~3 min | If you already use Telegram, no new app needed. Works on any device signed in. |
+| **Discord** | ~1 min | Shortest setup. No bot — just a channel webhook. Works on any device signed in. |
+
+Whichever provider you pick, the notification arrives on every device that's signed in to that provider's app — phone, desktop, browser, watch (via the phone's mirroring), etc. The bridge is **device-agnostic**.
 
 You can switch later by re-running `claude-watch-notify init`.
-
-## Compatibility
-
-This works with any smartwatch that mirrors phone notifications:
-
-- **Apple Watch** (via iPhone)
-- **Wear OS** watches (Pixel Watch, TicWatch, Fossil, etc.)
-- **Samsung Galaxy Watch**
-- **Garmin** watches (via Garmin Connect)
-- **Huawei** watches (via Huawei Health) — GT, Fit, and Watch series including Watch Fit 4
-- **Xiaomi / Amazfit / Mi Band** (via Zepp or Mi Fitness)
-- **Fitbit** (Versa, Sense, etc.)
-- Any other watch that mirrors phone app notifications
 
 ## Provider setup
 
 ### ntfy (default)
 1. Run `claude-watch-notify init` — it suggests a long random topic name.
-2. Install the **ntfy** app on your phone:
+2. Install the **ntfy** app:
    - https://ntfy.sh/app, the App Store, or the Play Store
-3. Open the URL printed by `init` (looks like `https://ntfy.sh/<your-topic>`) on your phone — the ntfy app intercepts it and offers to subscribe.
+3. Open the URL printed by `init` (looks like `https://ntfy.sh/<your-topic>`) — the ntfy app intercepts it and offers to subscribe.
 
 For private channels, set up an [ntfy.sh access token](https://docs.ntfy.sh/config/#access-tokens) or self-host ntfy and put the auth token into your config.
 
@@ -86,33 +65,6 @@ For private channels, set up an [ntfy.sh access token](https://docs.ntfy.sh/conf
 2. Run `claude-watch-notify init`, choose `discord`, paste the URL.
 
 If you don't have a server, you can [create one in Discord](https://support.discord.com/hc/en-us/articles/204849977) for free; it can have just one channel and no other members.
-
-## Smartwatch setup
-
-**General principle:** most watches mirror phone notifications automatically. You just need to make sure your provider's app (ntfy / Telegram / Discord) is allowed to send notifications, and your watch's companion app whitelists it.
-
-### Apple Watch
-Settings → Notifications → [your provider app] → enable "Mirror iPhone alerts" (or per-app: turn on Notifications → Allow Notifications).
-
-### Wear OS (Pixel Watch, TicWatch, Fossil, etc.)
-Phone → Wear OS / Pixel Watch app → Notifications → make sure your provider app is enabled.
-
-### Samsung Galaxy Watch
-Phone → Galaxy Wearable app → Notifications → manage app notifications → enable the provider app.
-
-### Garmin
-Garmin Connect → Notifications → App notifications → enable the provider app.
-
-### Huawei (Health app)
-Huawei Health → Devices → [your watch] → Notifications → toggle the provider app on. Make sure background app permissions for the provider and Health are granted on the phone.
-
-### Xiaomi / Amazfit (Zepp / Mi Fitness)
-Zepp or Mi Fitness → Profile → [your watch] → App alerts → enable the provider app.
-
-### Fitbit
-Fitbit app → [your device] → Notifications → App notifications → enable the provider app.
-
-If your watch isn't listed, the recipe is the same: open your watch's companion app on your phone, find "App notifications" or similar, and turn on your provider.
 
 ## Commands
 
@@ -210,7 +162,7 @@ Config file: `~/.claude-watch-notify.json`. Run `claude-watch-notify init` to cr
 Run `claude-watch-notify doctor` first — it tells you which step is broken.
 
 - **No notification at all** — `claude-watch-notify test --dry-run` to inspect the payload, then `claude-watch-notify test` to actually send. If dry-run looks right but `test` fails, the provider section of your config is wrong (token, URL, or chat ID).
-- **Phone gets it but the watch doesn't** — open your watch's companion app on your phone (see "Smartwatch setup" above) and confirm your provider app is in the allowed-notifications list. Also check Do Not Disturb on the watch.
+- **Notification reaches one device but not another** — that's a provider-app setting on the device that's missing it (notification permission, mirroring rules, Do Not Disturb). The CLI's job ends once the provider accepts the message.
 - **Hooks never fire** — `claude --debug` and look for hook output. Make sure `claude-watch-notify` is on Claude Code's `PATH`. Or re-run `claude-watch-notify install-hooks`.
 - **Body looks wrong or truncated** — adjust `summary.maxLength`. If the body is empty for Stop events, the transcript reader couldn't find a recent assistant message; harmless.
 - **Notifications at 3am** — set `quietHours.enabled: true` and pick a window. Use `allowHighPriority: false` to silence input-needed alerts too.
