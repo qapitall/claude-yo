@@ -4,7 +4,7 @@
   "description": "Push notifications when Claude Code finishes a task. Sends via ntfy, Discord, or Telegram — only when you ask for it.",
   "type": "module",
   "bin": {
-    "claude-yo": "./bin/claude-yo.js"
+    "claude-yo": "bin/claude-yo.js"
   },
   "engines": {
     "node": ">=18"
