@@ -1,7 +1,8 @@
 {
+  "mode": "on-demand",
   "provider": "ntfy",
   "ntfy": {
-    "topic": "claude-watch-replace-with-your-long-random-topic",
+    "topic": "cwn-replace-with-your-long-random-topic",
     "server": "https://ntfy.sh",
     "authToken": null
   },

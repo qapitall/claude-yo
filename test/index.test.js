@@ -181,6 +181,27 @@ test('run: armed mode skips when not armed', async () => {
   assert.match(r.reason, /not armed/);
 });
 
+test('run: armed mode still respects quiet hours', async () => {
+  const cfg = {
+    ...baseConfig,
+    mode: 'armed',
+    quietHours: { enabled: true, start: '00:00', end: '23:59', allowHighPriority: false },
+  };
+  const err = captureStream();
+  const r = await run({
+    rawStdin: JSON.stringify({ hook_event_name: 'Stop', cwd: '/tmp/x' }),
+    config: cfg,
+    err,
+    out: captureStream(),
+    now: new Date(2026, 4, 6, 12, 0, 0),
+    armChecker: async () => true,
+    armReader: async () => ({}),
+    armClearer: async () => true,
+  });
+  assert.equal(r.sent, false);
+  assert.match(r.reason, /quiet hours/);
+});
+
 test('run: armed mode bypasses filter allowlist', async () => {
   const cfg = {
     ...baseConfig,

@@ -2,7 +2,11 @@ import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-export const DEFAULT_SETTINGS_PATH = join(homedir(), '.claude', 'settings.json');
+export const DEFAULT_SETTINGS_PATH = join(
+  homedir(),
+  '.claude',
+  'settings.json',
+);
 
 export const HOOK_EVENTS = ['Stop', 'Notification'];
 

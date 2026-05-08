@@ -25,6 +25,7 @@ function parseArgs(argv) {
     priority: null,
     dryRun: false,
     yes: false,
+    skipSend: false,
     help: false,
     version: false,
     positional: [],
@@ -35,6 +36,7 @@ function parseArgs(argv) {
     else if (a === '--version' || a === '-v') args.version = true;
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--yes' || a === '-y') args.yes = true;
+    else if (a === '--skip-send') args.skipSend = true;
     else if (a === '--event') args.event = argv[++i] ?? null;
     else if (a.startsWith('--event=')) args.event = a.slice('--event='.length);
     else if (a === '--message' || a === '-m') args.message = argv[++i] ?? null;
@@ -60,12 +62,13 @@ Usage:
   claude-watch-notify ping [--message TXT]  Send a one-shot notification (used by the skill)
   claude-watch-notify arm [--message TXT]   Arm: next hook fires once (only in armed mode)
   claude-watch-notify disarm                Clear armed state
+  claude-watch-notify arm-status            Show whether the system is currently armed
   claude-watch-notify mode [name]           Show or switch mode (on-demand | armed | always)
   claude-watch-notify install-hooks         Auto-merge hook block into ~/.claude/settings.json
   claude-watch-notify install-skill         Install the notify-on-demand skill
   claude-watch-notify uninstall             Remove hooks, skill, armed flag, and config
   claude-watch-notify test                  Send a test notification
-  claude-watch-notify doctor                Check config, mode, hooks/skill, connectivity
+  claude-watch-notify doctor [--skip-send]  Check config, mode, hooks/skill, connectivity
   claude-watch-notify --event Stop          Used by Claude Code hooks (stdin = JSON)
   claude-watch-notify --dry-run             Print the request without sending
   claude-watch-notify --help                Show this help
@@ -82,6 +85,7 @@ Flags:
   --priority      Priority for ping (low | default | high | urgent)
   --yes, -y       Non-interactive: auto-confirm prompts
   --dry-run       Show what would be sent instead of sending
+  --skip-send     Skip the live send check in doctor (config + hooks only)
 `);
 }
 
@@ -119,7 +123,7 @@ async function main() {
     case 'test':
       return await runTest({ dryRun: args.dryRun });
     case 'doctor':
-      return await runDoctor();
+      return await runDoctor({ skipSend: args.skipSend });
     case 'ping':
       return await runPing({
         message: args.message ?? '',

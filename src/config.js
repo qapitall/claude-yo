@@ -121,15 +121,3 @@ export async function saveConfig(config, path = DEFAULT_CONFIG_PATH) {
   return path;
 }
 
-export function redactForDisplay(config) {
-  const c = JSON.parse(JSON.stringify(config));
-  if (c?.ntfy?.authToken) c.ntfy.authToken = '[REDACTED]';
-  if (c?.telegram?.botToken) c.telegram.botToken = '[REDACTED]';
-  if (c?.discord?.webhookUrl) {
-    c.discord.webhookUrl = c.discord.webhookUrl.replace(
-      /(\/api\/webhooks\/\d+\/)[A-Za-z0-9_-]+/,
-      '$1[REDACTED]',
-    );
-  }
-  return c;
-}

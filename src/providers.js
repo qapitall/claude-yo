@@ -44,17 +44,6 @@ export function redactRequest(config, req) {
   return p.redactRequest ? p.redactRequest(req) : req;
 }
 
-export function redactConfig(config) {
-  if (!config) return config;
-  const out = { ...config };
-  for (const name of Object.keys(PROVIDERS)) {
-    if (out[name] && PROVIDERS[name].redactConfig) {
-      out[name] = PROVIDERS[name].redactConfig(out[name]);
-    }
-  }
-  return out;
-}
-
 export function validateProviderConfig(config) {
   const p = activeProvider(config);
   return p.validateConfig(config[p.name]);

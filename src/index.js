@@ -114,16 +114,19 @@ export async function run({
     quietHours: { ...(config.quietHours ?? {}), __inRange: inRange },
   };
 
-  // Armed mode: user explicitly asked to be pinged. Bypass filters
-  // (minDuration / allowlist) but still respect quiet hours.
-  if (mode === 'always') {
+  // always mode: apply all filters (allowlist, minDuration, quiet hours).
+  // armed mode: user explicitly asked to be pinged, so bypass the allowlist
+  // and minDuration filters — but still honour quiet hours.
+  if (mode === 'always' || mode === 'armed') {
     const decision = shouldSend(
       {
         event: payload.event,
         durationSec,
         isHighPriority: isHighPriorityEvent(payload.event),
       },
-      cfgWithRange,
+      mode === 'armed'
+        ? { ...cfgWithRange, filters: {} }
+        : cfgWithRange,
     );
     if (!decision.send) {
       err.write(`⚠ skipped: ${decision.reason}\n`);
@@ -139,7 +142,10 @@ export async function run({
 
   // If user passed --message to `arm`, prefer it as the body.
   if (armPayload && typeof armPayload.message === 'string' && armPayload.message !== '') {
-    notification.body = armPayload.message.slice(0, config.summary?.maxLength ?? 100);
+    notification.body = summarize(
+      armPayload.message,
+      config.summary?.maxLength ?? 100,
+    );
   }
 
   if (dryRun) {

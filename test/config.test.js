@@ -7,7 +7,6 @@ import {
   loadConfig,
   saveConfig,
   validateConfig,
-  redactForDisplay,
   DEFAULT_CONFIG,
 } from '../src/config.js';
 
@@ -84,16 +83,3 @@ test('validateConfig: rejects when ntfy section missing', () => {
   assert.equal(r.ok, false);
 });
 
-test('redactForDisplay: hides authToken', () => {
-  const r = redactForDisplay({
-    ntfy: { topic: 't', authToken: 'secret', server: 'x' },
-  });
-  assert.equal(r.ntfy.authToken, '[REDACTED]');
-});
-
-test('redactForDisplay: leaves null token alone', () => {
-  const r = redactForDisplay({
-    ntfy: { topic: 't', authToken: null, server: 'x' },
-  });
-  assert.equal(r.ntfy.authToken, null);
-});

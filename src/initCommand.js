@@ -136,7 +136,7 @@ function postInstallHints(provider, providerCfg, mode = 'on-demand') {
   }
   if (mode === 'on-demand') {
     output.write(
-      `  4. Install the on-demand skill so Claude can ping you when you ask:\n`,
+      `  3. Install the on-demand skill so Claude can ping you when you ask:\n`,
     );
     output.write(`       claude-watch-notify install-skill\n`);
     output.write(
@@ -145,7 +145,7 @@ function postInstallHints(provider, providerCfg, mode = 'on-demand') {
     );
   } else {
     output.write(
-      `  4. Install the Claude Code hook automatically: claude-watch-notify install-hooks\n`,
+      `  3. Install the Claude Code hook automatically: claude-watch-notify install-hooks\n`,
     );
     output.write(`     (or paste the snippet below into ~/.claude/settings.json):\n\n`);
     output.write(settingsSnippet() + '\n\n');
@@ -156,7 +156,7 @@ function postInstallHints(provider, providerCfg, mode = 'on-demand') {
     }
   }
   output.write(
-    `  5. Send a test notification: claude-watch-notify test\n`,
+    `  4. Send a test notification: claude-watch-notify test\n`,
   );
 }
 
