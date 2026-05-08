@@ -63,16 +63,11 @@ Detailed steps for each below.
 
    <p>
      <a href="https://apps.apple.com/us/app/ntfy/id1625396347">
-       <img src="https://img.shields.io/badge/Download_on-App_Store-0D96F6?style=for-the-badge&logo=apple&logoColor=white" alt="Download on the App Store" height="40">
+       <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="44">
      </a>
+     &nbsp;
      <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy">
-       <img src="https://img.shields.io/badge/Get_on-Google_Play-414141?style=for-the-badge&logo=googleplay&logoColor=white" alt="Get on Google Play" height="40">
-     </a>
-     <a href="https://f-droid.org/packages/io.heckel.ntfy/">
-       <img src="https://img.shields.io/badge/Get_on-F--Droid-1976D2?style=for-the-badge&logo=fdroid&logoColor=white" alt="Get on F-Droid" height="40">
-     </a>
-     <a href="https://ntfy.sh/app">
-       <img src="https://img.shields.io/badge/Open-Web_App-2196F3?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Web app" height="40">
+       <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get on Google Play" height="65">
      </a>
    </p>
 
