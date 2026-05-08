@@ -2,15 +2,39 @@
 
 Get a notification on your smartwatch when Claude Code finishes a task or needs your input.
 
+## Quick start
+
+```bash
+npm install -g claude-watch-notify
+claude-watch-notify setup
+```
+
+`setup` runs three steps in one:
+1. **init** — pick a provider, fill in a few fields.
+2. **install-hooks** — auto-merges the `Stop` and `Notification` hooks into your `~/.claude/settings.json` (with a diff preview and a backup of the previous file).
+3. **test** — sends a real notification so you confirm everything works end-to-end.
+
+If something doesn't work, run `claude-watch-notify doctor` for a green/red checklist.
+
 ## Why?
 
-Long Claude Code tasks leave you wondering whether they're done. You don't want to babysit the terminal. This CLI hooks into Claude Code's `Stop` and `Notification` events, sends a push to a self-hosted or public [ntfy](https://ntfy.sh) topic, and your phone mirrors that push to whichever smartwatch you wear.
+Long Claude Code tasks leave you wondering whether they're done. You don't want to babysit the terminal. This CLI hooks into Claude Code's `Stop` and `Notification` events, sends a push to one of three providers, and your phone mirrors that push to whichever smartwatch you wear.
 
 ```
-Claude Code hook → stdin (JSON) → CLI → HTTP POST → ntfy → phone → watch
+Claude Code hook → stdin (JSON) → CLI → HTTP POST → provider → phone → watch
 ```
 
 The bridge is **device-agnostic**. There is no watch-specific code in this project. The phone does the mirroring; the watch just shows the notification.
+
+## Pick a provider
+
+| Provider | New app on phone? | Setup time | Best for |
+|---|---|---|---|
+| **ntfy** (default) | yes (free, FOSS) | ~3 min | clean dedicated channel, self-hostable |
+| **Telegram** | no, if you already use Telegram | ~3 min | "I don't want a new app" |
+| **Discord** | no, if you already use Discord | ~1 min | shortest setup, no bot needed |
+
+You can switch later by re-running `claude-watch-notify init`.
 
 ## Compatibility
 
@@ -25,55 +49,73 @@ This works with any smartwatch that mirrors phone notifications:
 - **Fitbit** (Versa, Sense, etc.)
 - Any other watch that mirrors phone app notifications
 
-## Quick start
+## Provider setup
 
-```bash
-npm install -g claude-watch-notify
-claude-watch-notify init
-claude-watch-notify test
-```
+### ntfy (default)
+1. Run `claude-watch-notify init` — it suggests a long random topic name.
+2. Install the **ntfy** app on your phone:
+   - https://ntfy.sh/app, the App Store, or the Play Store
+3. Open the URL printed by `init` (looks like `https://ntfy.sh/<your-topic>`) on your phone — the ntfy app intercepts it and offers to subscribe.
 
-`init` walks you through topic setup and writes `~/.claude-watch-notify.json`. `test` sends a real notification so you can confirm the bridge works end to end.
+For private channels, set up an [ntfy.sh access token](https://docs.ntfy.sh/config/#access-tokens) or self-host ntfy and put the auth token into your config.
 
-## Phone setup
+### Telegram (no new app if you already use Telegram)
+1. In Telegram, talk to **@BotFather** and send `/newbot`. Choose a name; it gives you a **bot token** like `123456789:ABCdef...`.
+2. Send `/start` to your new bot (so it can message you).
+3. Get your **chat ID**: send a message to **@userinfobot** in Telegram, or open `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser and look for `"chat":{"id":...}`.
+4. Run `claude-watch-notify init`, choose `telegram`, paste the token and chat ID.
 
-1. Install the **ntfy** app on your phone:
-   - Web app: https://ntfy.sh/app
-   - iOS: search "ntfy" on the App Store
-   - Android: search "ntfy" on the Play Store, or use F-Droid
-2. In the app, **subscribe to the topic** you chose during `init` (e.g. `claude-watch-abc123`).
-3. Make sure notifications are enabled for the ntfy app on your phone.
+### Discord (shortest setup, no bot needed)
+1. In Discord, open a server channel you control → **Edit Channel** → **Integrations** → **Webhooks** → **New Webhook** → **Copy Webhook URL**.
+2. Run `claude-watch-notify init`, choose `discord`, paste the URL.
+
+If you don't have a server, you can [create one in Discord](https://support.discord.com/hc/en-us/articles/204849977) for free; it can have just one channel and no other members.
 
 ## Smartwatch setup
 
-**General principle:** most watches mirror phone notifications automatically. You just need to make sure the ntfy app on your phone is allowed to send notifications, and your watch's companion app whitelists ntfy.
+**General principle:** most watches mirror phone notifications automatically. You just need to make sure your provider's app (ntfy / Telegram / Discord) is allowed to send notifications, and your watch's companion app whitelists it.
 
 ### Apple Watch
-Settings → Notifications → ntfy → enable "Mirror iPhone alerts" (or per-app: turn on Notifications → Allow Notifications).
+Settings → Notifications → [your provider app] → enable "Mirror iPhone alerts" (or per-app: turn on Notifications → Allow Notifications).
 
 ### Wear OS (Pixel Watch, TicWatch, Fossil, etc.)
-Phone → Wear OS / Pixel Watch app → Notifications → make sure ntfy is enabled.
+Phone → Wear OS / Pixel Watch app → Notifications → make sure your provider app is enabled.
 
 ### Samsung Galaxy Watch
-Phone → Galaxy Wearable app → Notifications → manage app notifications → enable ntfy.
+Phone → Galaxy Wearable app → Notifications → manage app notifications → enable the provider app.
 
 ### Garmin
-Garmin Connect → Notifications → App notifications → enable ntfy.
+Garmin Connect → Notifications → App notifications → enable the provider app.
 
 ### Huawei (Health app)
-Huawei Health → Devices → [your watch] → Notifications → toggle ntfy on. Make sure background app permissions for ntfy and Health are granted on the phone.
+Huawei Health → Devices → [your watch] → Notifications → toggle the provider app on. Make sure background app permissions for the provider and Health are granted on the phone.
 
 ### Xiaomi / Amazfit (Zepp / Mi Fitness)
-Zepp or Mi Fitness → Profile → [your watch] → App alerts → enable ntfy.
+Zepp or Mi Fitness → Profile → [your watch] → App alerts → enable the provider app.
 
 ### Fitbit
-Fitbit app → [your device] → Notifications → App notifications → enable ntfy.
+Fitbit app → [your device] → Notifications → App notifications → enable the provider app.
 
-If your watch isn't listed, the recipe is the same: open your watch's companion app on your phone, find "App notifications" or similar, and turn on ntfy.
+If your watch isn't listed, the recipe is the same: open your watch's companion app on your phone, find "App notifications" or similar, and turn on your provider.
 
-## Hook setup
+## Commands
 
-Add this block to your Claude Code `~/.claude/settings.json`:
+| Command | What it does |
+|---|---|
+| `setup` | One-shot: init + install-hooks + test |
+| `init` | Interactive config setup |
+| `install-hooks` | Auto-merge hook block into `~/.claude/settings.json` (shows a diff first) |
+| `test` | Send a test notification |
+| `test --dry-run` | Print the request without sending |
+| `doctor` | Green/red checklist: config, hooks, network |
+| `--event Stop` / `--event Notification` | Used by Claude Code hooks; pipe JSON over stdin |
+| `--help`, `--version` | Self-explanatory |
+
+`install-hooks` is **idempotent**: running it twice does not duplicate. It also creates a `settings.json.backup-<timestamp>` before overwriting.
+
+## Hook setup (manual, if you'd rather)
+
+If you don't want to use `install-hooks`, paste this into your Claude Code `~/.claude/settings.json`:
 
 ```json
 {
@@ -102,36 +144,45 @@ The CLI never blocks the hook: it always exits 0 and writes any errors to stderr
 
 ## Config reference
 
-Config file: `~/.claude-watch-notify.json`. Run `claude-watch-notify init` to create it interactively.
+Config file: `~/.claude-watch-notify.json`. Run `claude-watch-notify init` to create it.
 
 | Path | Type | Default | Meaning |
 |---|---|---|---|
-| `ntfy.topic` | string | (required) | The ntfy topic name. Anyone with this name can publish/read; pick something unguessable. |
-| `ntfy.server` | string | `https://ntfy.sh` | Override for self-hosted ntfy. |
-| `ntfy.authToken` | string \| null | `null` | Bearer token for protected topics. Never logged in plain text. |
-| `filters.minDurationSeconds` | number | `30` | Skip Stop notifications for tasks shorter than this. Computed from transcript timestamps; if missing, the filter is skipped. |
-| `filters.events` | string[] | `["Stop","Notification"]` | Allowlist of hook event names that should produce a notification. |
-| `quietHours.enabled` | boolean | `false` | Master toggle. |
-| `quietHours.start` | string | `"23:00"` | `HH:MM`, 24-hour. Cross-midnight ranges (e.g. `23:00`–`08:00`) work. |
-| `quietHours.end` | string | `"08:00"` | `HH:MM`, exclusive. |
-| `quietHours.allowHighPriority` | boolean | `true` | When in the quiet window, still send `Notification` (high-priority) events. |
-| `summary.maxLength` | number | `100` | Truncate the notification body to this many characters. |
-| `summary.includeProjectName` | boolean | `true` | Prepend the project folder basename to the notification title. |
+| `provider` | `"ntfy"` \| `"discord"` \| `"telegram"` | `"ntfy"` | Which provider sends the notification |
+| `ntfy.topic` | string | (required for ntfy) | The ntfy topic name |
+| `ntfy.server` | string | `https://ntfy.sh` | Override for self-hosted ntfy |
+| `ntfy.authToken` | string \| null | `null` | Bearer token for protected topics |
+| `discord.webhookUrl` | string | (required for discord) | Discord channel webhook URL |
+| `telegram.botToken` | string | (required for telegram) | Telegram bot token from @BotFather |
+| `telegram.chatId` | string \| number | (required for telegram) | Chat ID to send to |
+| `filters.minDurationSeconds` | number | `30` | Skip Stop notifications shorter than this |
+| `filters.events` | string[] | `["Stop","Notification"]` | Hook event allowlist |
+| `quietHours.enabled` | boolean | `false` | Master toggle |
+| `quietHours.start` | string | `"23:00"` | `HH:MM`, 24-hour. Cross-midnight ranges work |
+| `quietHours.end` | string | `"08:00"` | `HH:MM`, exclusive |
+| `quietHours.allowHighPriority` | boolean | `true` | When in quiet hours, still allow `Notification` events |
+| `summary.maxLength` | number | `100` | Truncate the body to this many characters |
+| `summary.includeProjectName` | boolean | `true` | Prepend the project folder basename to the title |
 
 ## Troubleshooting
 
-- **No notification at all** — run `claude-watch-notify test --dry-run` to inspect the payload, then `claude-watch-notify test` to actually send it. If the dry-run looks correct but `test` fails, check `ntfy.server`, `ntfy.topic`, and (if set) `authToken`.
-- **Phone gets it but the watch doesn't** — open your watch's companion app on your phone (see "Smartwatch setup" above) and confirm ntfy is in the allowed-notifications list. Also check Do Not Disturb settings on the watch.
-- **Hooks never fire** — run Claude Code with `claude --debug` and look for hook output. Make sure the path in `command` resolves (use the full path to the binary if `claude-watch-notify` isn't on Claude Code's `PATH`).
-- **Body looks wrong or truncated** — adjust `summary.maxLength`. If the body is empty for `Stop` events, the transcript reader couldn't find a recent assistant message; this is harmless.
-- **Notification arrived in the middle of the night** — enable `quietHours` and pick a sensible window. Set `allowHighPriority: false` if you want to silence input-needed alerts too.
+Run `claude-watch-notify doctor` first — it tells you which step is broken.
+
+- **No notification at all** — `claude-watch-notify test --dry-run` to inspect the payload, then `claude-watch-notify test` to actually send. If dry-run looks right but `test` fails, the provider section of your config is wrong (token, URL, or chat ID).
+- **Phone gets it but the watch doesn't** — open your watch's companion app on your phone (see "Smartwatch setup" above) and confirm your provider app is in the allowed-notifications list. Also check Do Not Disturb on the watch.
+- **Hooks never fire** — `claude --debug` and look for hook output. Make sure `claude-watch-notify` is on Claude Code's `PATH`. Or re-run `claude-watch-notify install-hooks`.
+- **Body looks wrong or truncated** — adjust `summary.maxLength`. If the body is empty for Stop events, the transcript reader couldn't find a recent assistant message; harmless.
+- **Notifications at 3am** — set `quietHours.enabled: true` and pick a window. Use `allowHighPriority: false` to silence input-needed alerts too.
 
 ## Security notes
 
-- `authToken` is redacted (`[REDACTED]`) in `--dry-run` output and in any error messages written to stderr.
+- All secrets (`ntfy.authToken`, `telegram.botToken`, `discord.webhookUrl`) are redacted in `--dry-run` output and any error messages.
 - Header values are sanitized to strip `\r` and `\n` (CRLF injection guard).
-- The CLI does not exec a shell. All network IO is through Node's built-in `fetch`.
-- The config file is written with mode `0600` so other users on the machine can't read your token.
+- Discord webhook URL tokens are redacted by replacing the trailing token segment with `[REDACTED]`.
+- Telegram bot tokens are redacted in the request URL.
+- The CLI does not exec a shell. All network IO uses Node's built-in `fetch`.
+- The config file is written with mode `0600` (only your user can read it).
+- ntfy.sh public topics are world-readable by anyone who guesses the topic name. The default suggestion is 64 bits of entropy (16 hex chars), which is unguessable in practice. For sensitive content, use ntfy with auth tokens, or pick the Telegram / Discord provider, or self-host ntfy.
 
 ## Contributing
 

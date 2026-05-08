@@ -1,8 +1,16 @@
 {
+  "provider": "ntfy",
   "ntfy": {
-    "topic": "claude-watch-xyz123",
+    "topic": "claude-watch-replace-with-your-long-random-topic",
     "server": "https://ntfy.sh",
     "authToken": null
+  },
+  "discord": {
+    "webhookUrl": null
+  },
+  "telegram": {
+    "botToken": null,
+    "chatId": null
   },
   "filters": {
     "minDurationSeconds": 30,
