@@ -38,7 +38,7 @@ function entryAlreadyInstalled(matcherEntry) {
   );
 }
 
-function isCwnHook(h) {
+function isOurHook(h) {
   return (
     isPlainObject(h) &&
     typeof h.command === 'string' &&
@@ -46,10 +46,10 @@ function isCwnHook(h) {
   );
 }
 
-function stripCwnFromMatcher(matcher) {
+function stripOurHooksFromMatcher(matcher) {
   if (!isPlainObject(matcher)) return matcher;
   const hooks = Array.isArray(matcher.hooks) ? matcher.hooks : [];
-  const remaining = hooks.filter((h) => !isCwnHook(h));
+  const remaining = hooks.filter((h) => !isOurHook(h));
   if (remaining.length === 0) return null;
   if (remaining.length === hooks.length) return matcher;
   return { ...matcher, hooks: remaining };
@@ -87,7 +87,7 @@ export function planUninstall(existingSettings) {
       continue;
     }
     const filtered = list
-      .map(stripCwnFromMatcher)
+      .map(stripOurHooksFromMatcher)
       .filter((m) => m !== null);
     const before = JSON.stringify(list);
     const after = JSON.stringify(filtered);

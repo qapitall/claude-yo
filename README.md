@@ -1,5 +1,6 @@
 # claude-yo
 
+[![CI](https://github.com/qapitall/claude-yo/actions/workflows/ci.yml/badge.svg)](https://github.com/qapitall/claude-yo/actions/workflows/ci.yml)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Node ≥18](https://img.shields.io/badge/node-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white)
 ![Zero dependencies](https://img.shields.io/badge/dependencies-zero-success?style=flat-square)
@@ -160,7 +161,7 @@ npm uninstall -g claude-yo   # the binary itself
 Issues and PRs welcome — the project is small on purpose, no runtime dependencies.
 
 ```bash
-git clone https://github.com/<your-fork>/claude-yo
+git clone https://github.com/qapitall/claude-yo
 cd claude-yo
 ```
 
