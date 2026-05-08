@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { DEFAULT_CONFIG, DEFAULT_CONFIG_PATH, saveConfig } from './config.js';
 
 function suggestTopic() {
-  return 'claude-watch-' + randomBytes(3).toString('hex');
+  return 'claude-watch-' + randomBytes(8).toString('hex');
 }
 
 async function ask(rl, prompt, defaultValue) {
@@ -18,6 +18,58 @@ async function askYesNo(rl, prompt, defaultYes) {
   const answer = (await rl.question(`${prompt} ${hint}: `)).trim().toLowerCase();
   if (answer === '') return defaultYes;
   return answer === 'y' || answer === 'yes';
+}
+
+async function askChoice(rl, prompt, choices, defaultChoice) {
+  while (true) {
+    const ans = (
+      await rl.question(`${prompt} (${choices.join('/')}) [${defaultChoice}]: `)
+    )
+      .trim()
+      .toLowerCase();
+    const value = ans === '' ? defaultChoice : ans;
+    if (choices.includes(value)) return value;
+    output.write(`  please answer one of: ${choices.join(', ')}\n`);
+  }
+}
+
+async function configureNtfy(rl) {
+  const topic = await ask(rl, 'ntfy topic', suggestTopic());
+  const server = await ask(
+    rl,
+    'ntfy server (use https://ntfy.sh unless self-hosted)',
+    DEFAULT_CONFIG.ntfy.server,
+  );
+  const tokenAns = await ask(
+    rl,
+    'ntfy auth token (leave empty for public topic)',
+    '',
+  );
+  return {
+    topic,
+    server,
+    authToken: tokenAns === '' ? null : tokenAns,
+  };
+}
+
+async function configureDiscord(rl) {
+  output.write(
+    '\nTo get a Discord webhook URL: open Discord → server channel → Edit Channel → Integrations → Webhooks → "New Webhook" → "Copy Webhook URL".\n\n',
+  );
+  const webhookUrl = await ask(rl, 'discord webhook URL', '');
+  return { webhookUrl: webhookUrl === '' ? null : webhookUrl };
+}
+
+async function configureTelegram(rl) {
+  output.write(
+    '\nTo get a Telegram bot token: open Telegram, talk to @BotFather, send /newbot, follow the prompts.\nTo get your chat ID: send /start to your new bot, then talk to @userinfobot or visit https://api.telegram.org/bot<TOKEN>/getUpdates.\n\n',
+  );
+  const botToken = await ask(rl, 'telegram bot token', '');
+  const chatId = await ask(rl, 'telegram chat ID', '');
+  return {
+    botToken: botToken === '' ? null : botToken,
+    chatId: chatId === '' ? null : chatId,
+  };
 }
 
 function settingsSnippet() {
@@ -55,25 +107,64 @@ function settingsSnippet() {
   );
 }
 
+function postInstallHints(provider, providerCfg) {
+  output.write('\nNext steps:\n');
+  if (provider === 'ntfy') {
+    const url = `${providerCfg.server.replace(/\/+$/, '')}/${providerCfg.topic}`;
+    output.write(`  1. Install the ntfy app on your phone: https://ntfy.sh/app\n`);
+    output.write(`  2. Subscribe to your topic — open this URL on your phone:\n`);
+    output.write(`       ${url}\n`);
+    output.write(
+      `     The link opens the ntfy app (if installed) and prompts to subscribe.\n`,
+    );
+  } else if (provider === 'discord') {
+    output.write(
+      `  1. Notifications will appear in the Discord channel that owns the webhook.\n`,
+    );
+    output.write(
+      `  2. Make sure Discord is allowed to send notifications on your phone.\n`,
+    );
+  } else if (provider === 'telegram') {
+    output.write(
+      `  1. Notifications will appear in the Telegram chat with your bot.\n`,
+    );
+    output.write(
+      `  2. Make sure Telegram is allowed to send notifications on your phone.\n`,
+    );
+  }
+  output.write(
+    `  3. Confirm your watch's companion app mirrors that app's notifications (see README "Smartwatch setup").\n`,
+  );
+  output.write(
+    `  4. Install the Claude Code hook automatically: claude-watch-notify install-hooks\n`,
+  );
+  output.write(`     (or paste the snippet below into ~/.claude/settings.json):\n\n`);
+  output.write(settingsSnippet() + '\n\n');
+  output.write(
+    `  5. Send a test notification: claude-watch-notify test\n`,
+  );
+}
+
 export async function runInit() {
   const rl = createInterface({ input, output });
   output.write('claude-watch-notify init\n\n');
   output.write(
-    'This will create ~/.claude-watch-notify.json and print the hook config to add to Claude Code.\n\n',
+    'This will create ~/.claude-watch-notify.json with your notification provider settings.\n\n',
   );
 
   try {
-    const topic = await ask(rl, 'ntfy topic', suggestTopic());
-    const server = await ask(
+    const provider = await askChoice(
       rl,
-      'ntfy server (use https://ntfy.sh unless self-hosted)',
-      DEFAULT_CONFIG.ntfy.server,
+      'Which provider?',
+      ['ntfy', 'discord', 'telegram'],
+      'ntfy',
     );
-    const tokenAns = await ask(
-      rl,
-      'ntfy auth token (leave empty for public topic)',
-      '',
-    );
+
+    let providerSection;
+    if (provider === 'ntfy') providerSection = await configureNtfy(rl);
+    else if (provider === 'discord') providerSection = await configureDiscord(rl);
+    else providerSection = await configureTelegram(rl);
+
     const minSec = await ask(
       rl,
       'minimum task duration before notifying (seconds)',
@@ -88,11 +179,11 @@ export async function runInit() {
     }
 
     const config = {
-      ntfy: {
-        topic,
-        server,
-        authToken: tokenAns === '' ? null : tokenAns,
-      },
+      provider,
+      ntfy: { ...DEFAULT_CONFIG.ntfy },
+      discord: { ...DEFAULT_CONFIG.discord },
+      telegram: { ...DEFAULT_CONFIG.telegram },
+      [provider]: providerSection,
       filters: {
         minDurationSeconds: Number.isFinite(Number(minSec))
           ? Number(minSec)
@@ -109,25 +200,9 @@ export async function runInit() {
     };
 
     const path = await saveConfig(config, DEFAULT_CONFIG_PATH);
-    output.write(`\n✓ wrote ${path}\n\n`);
+    output.write(`\n✓ wrote ${path}\n`);
 
-    output.write('Next steps:\n');
-    output.write(
-      `  1. Install the ntfy app on your phone (https://ntfy.sh/app, App Store, or Play Store).\n`,
-    );
-    output.write(
-      `  2. Subscribe to topic: ${topic}\n`,
-    );
-    output.write(
-      `  3. Make sure your smartwatch's companion app mirrors notifications from ntfy (see README "Smartwatch setup").\n`,
-    );
-    output.write(
-      `  4. Add the following to your Claude Code ~/.claude/settings.json:\n\n`,
-    );
-    output.write(settingsSnippet() + '\n\n');
-    output.write(
-      `  5. Send a test notification: claude-watch-notify test\n`,
-    );
+    postInstallHints(provider, providerSection);
     return 0;
   } catch (err) {
     output.write(`\n⚠ init aborted: ${err?.message ?? err}\n`);

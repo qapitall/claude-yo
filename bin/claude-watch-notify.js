@@ -5,6 +5,9 @@ import { dirname, join } from 'node:path';
 import { runFromHook } from '../src/index.js';
 import { runInit } from '../src/initCommand.js';
 import { runTest } from '../src/testCommand.js';
+import { runInstallHooks } from '../src/installHooksCommand.js';
+import { runSetup } from '../src/setupCommand.js';
+import { runDoctor } from '../src/doctorCommand.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -13,6 +16,7 @@ function parseArgs(argv) {
     command: null,
     event: null,
     dryRun: false,
+    yes: false,
     help: false,
     version: false,
   };
@@ -22,6 +26,7 @@ function parseArgs(argv) {
     if (a === '--help' || a === '-h') args.help = true;
     else if (a === '--version' || a === '-v') args.version = true;
     else if (a === '--dry-run') args.dryRun = true;
+    else if (a === '--yes' || a === '-y') args.yes = true;
     else if (a === '--event') args.event = argv[++i] ?? null;
     else if (a.startsWith('--event=')) args.event = a.slice('--event='.length);
     else if (!a.startsWith('-')) positional.push(a);
@@ -34,13 +39,20 @@ function printHelp() {
   process.stdout.write(`claude-watch-notify - smartwatch notifications for Claude Code
 
 Usage:
-  claude-watch-notify --event Stop          Send a notification for a Stop hook
-  claude-watch-notify --event Notification  Send a notification for an input-needed hook
+  claude-watch-notify setup                 One-shot init + install-hooks + test
   claude-watch-notify init                  Interactive config setup
+  claude-watch-notify install-hooks         Auto-merge hook block into ~/.claude/settings.json
   claude-watch-notify test                  Send a test notification
+  claude-watch-notify doctor                Check config, hooks, and connectivity
+  claude-watch-notify --event Stop          Send notification for a Stop hook
+  claude-watch-notify --event Notification  Send notification for an input-needed hook
   claude-watch-notify --dry-run             Print the request without sending
   claude-watch-notify --help                Show this help
   claude-watch-notify --version             Show version
+
+Flags:
+  --yes, -y       Non-interactive: auto-confirm prompts (e.g. install-hooks)
+  --dry-run       Show what would be sent instead of sending
 
 In a hook, Claude Code pipes a JSON payload over stdin. The CLI never blocks
 the hook: it always exits 0 and prints any errors to stderr.
@@ -68,12 +80,12 @@ async function main() {
     process.stdout.write((await readVersion()) + '\n');
     return 0;
   }
-  if (args.command === 'init') {
-    return await runInit();
-  }
-  if (args.command === 'test') {
-    return await runTest({ dryRun: args.dryRun });
-  }
+  if (args.command === 'init') return await runInit();
+  if (args.command === 'setup') return await runSetup();
+  if (args.command === 'install-hooks')
+    return await runInstallHooks({ assumeYes: args.yes });
+  if (args.command === 'test') return await runTest({ dryRun: args.dryRun });
+  if (args.command === 'doctor') return await runDoctor();
 
   // Default: hook handler. Always exit 0 so we never block Claude Code.
   await runFromHook({ event: args.event, dryRun: args.dryRun });
