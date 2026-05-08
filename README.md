@@ -1,14 +1,18 @@
 # claude-watch-notify
 
+![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+![Node ≥18](https://img.shields.io/badge/node-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white)
+![Zero dependencies](https://img.shields.io/badge/dependencies-zero-success?style=flat-square)
+
 A small CLI that sends you a push notification when Claude Code finishes a task — but only when you actually ask for one.
 
-## The problem it solves
+## 🤔 The problem it solves
 
 Long Claude Code tasks leave you wondering: is it done yet? Did it stop because it got stuck? Has it been waiting on me for the last 20 minutes? You don't want to babysit the terminal, but you also don't want a buzz on every short reply.
 
 This tool sits between Claude Code and your phone (via ntfy, Telegram, or Discord) and pings you exactly when you wanted to be pinged.
 
-## What it looks like
+## ✨ What it looks like
 
 After a one-time setup, in any Claude Code conversation you can just say:
 
@@ -16,36 +20,39 @@ After a one-time setup, in any Claude Code conversation you can just say:
 
 Claude does the work. Right before it sends its final reply, it quietly runs `claude-watch-notify ping` once. Your phone pops a notification:
 
-> **✓ Tests passed (107/107)**
+> **✓ Tests passed**
 
 That's it. No buzz on short answers, no extra subscriptions, no babysitting.
 
-## Get started
+## 🚀 Get started
 
 ```bash
 npm install -g claude-watch-notify
 claude-watch-notify setup
 ```
 
-`setup` asks a handful of questions — pick a mode, pick a provider, paste a token or topic — then sends a real test notification so you can confirm everything works. If something goes wrong, `claude-watch-notify doctor` will tell you which step is broken.
+`setup` asks a handful of questions — pick a mode, pick a provider, paste a token or topic — then sends a real test notification so you can confirm everything works.
 
-## How notifications fire (three modes)
+> [!TIP]
+> Stuck? `claude-watch-notify doctor` shows a green/red checklist of what's broken.
+
+## 🎛️ How notifications fire (three modes)
 
 You pick one of these during `setup`. Switch any time with `claude-watch-notify mode <name>`.
 
 | Mode | When notifications fire | When to pick it |
 |---|---|---|
-| **on-demand** *(default)* | Only when Claude runs `ping` — which it does when you ask ("ping me when…"). | Most people. Zero noise. |
-| **armed** | Only after you run `claude-watch-notify arm`. The next task-end fires once and clears itself. | Long tasks where you don't want to rely on Claude remembering. |
-| **always** | On every Stop/Notification hook. Filtered by `minDurationSeconds` and quiet hours. | Power users who want every-task pings. |
+| 🟢 **on-demand** *(default)* | Only when Claude runs `ping` — which it does when you ask ("ping me when…"). | Most people. Zero noise. |
+| 🟡 **armed** | Only after you run `claude-watch-notify arm`. The next task-end fires once and clears itself. | Long tasks where you don't want to rely on Claude remembering. |
+| 🔴 **always** | On every Stop/Notification hook. Filtered by `minDurationSeconds` and quiet hours. | Power users who want every-task pings. |
 
-## Pick a provider
+## 📡 Pick a provider
 
 You need somewhere for the notification to actually arrive. Three options:
 
-- **ntfy** *(default)* — Free, open-source, dedicated channel. You install the ntfy app and subscribe to a topic. Works on phone, web, and desktop.
-- **Telegram** — If you already use Telegram, no new app to install. A one-time bot setup and the messages appear in chat with your bot, on every device you're signed in to.
-- **Discord** — The shortest setup. Open a Discord channel you own, make a webhook, paste the URL. No bot, no token. Done.
+- **ntfy** *(default)* — Free, open-source, dedicated channel. Install the ntfy app and subscribe to a topic. Works on phone, web, and desktop.
+- **Telegram** — Already use Telegram? No new app needed. A one-time bot setup and the messages appear in chat with your bot, on every device you're signed in to.
+- **Discord** — The shortest setup. Open a Discord channel you own, make a webhook, paste the URL. No bot, no token.
 
 Detailed steps for each below.
 
@@ -54,15 +61,21 @@ Detailed steps for each below.
 1. `claude-watch-notify init` and choose `ntfy`. It suggests a long random topic name like `cwn-a3b7f9e2c1d4e8f6`.
 2. Install the **ntfy** app on your phone:
 
-   <a href="https://apps.apple.com/us/app/ntfy/id1625396347">
-     <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="50">
-   </a>
-   &nbsp;
-   <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy">
-     <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="50">
-   </a>
+   <p>
+     <a href="https://apps.apple.com/us/app/ntfy/id1625396347">
+       <img src="https://img.shields.io/badge/Download_on-App_Store-0D96F6?style=for-the-badge&logo=apple&logoColor=white" alt="Download on the App Store" height="40">
+     </a>
+     <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy">
+       <img src="https://img.shields.io/badge/Get_on-Google_Play-414141?style=for-the-badge&logo=googleplay&logoColor=white" alt="Get on Google Play" height="40">
+     </a>
+     <a href="https://f-droid.org/packages/io.heckel.ntfy/">
+       <img src="https://img.shields.io/badge/Get_on-F--Droid-1976D2?style=for-the-badge&logo=fdroid&logoColor=white" alt="Get on F-Droid" height="40">
+     </a>
+     <a href="https://ntfy.sh/app">
+       <img src="https://img.shields.io/badge/Open-Web_App-2196F3?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Web app" height="40">
+     </a>
+   </p>
 
-   Prefer F-Droid? [Get it there too](https://f-droid.org/packages/io.heckel.ntfy/). No phone? The [web app](https://ntfy.sh/app) works in any browser and even on desktop.
 3. Open the URL `init` printed (`https://ntfy.sh/<your-topic>`) on your device — the ntfy app intercepts it and offers to subscribe.
 
 For private channels, get an [ntfy access token](https://docs.ntfy.sh/config/#access-tokens) or self-host ntfy. Either way, drop the token into `ntfy.authToken` in your config.
@@ -79,9 +92,10 @@ For private channels, get an [ntfy access token](https://docs.ntfy.sh/config/#ac
 1. Open a Discord server channel you control. **Edit Channel → Integrations → Webhooks → New Webhook → Copy Webhook URL**.
 2. `claude-watch-notify init`, choose `discord`, paste the URL.
 
-If you don't have a server, Discord lets you [make one in a minute](https://support.discord.com/hc/en-us/articles/204849977) — empty, no members, no problem.
+> [!NOTE]
+> No server? Discord lets you [make one in a minute](https://support.discord.com/hc/en-us/articles/204849977) — empty, no members, no problem.
 
-## Commands you'll actually use
+## 🔧 Commands you'll actually use
 
 | Command | What it does |
 |---|---|
@@ -95,7 +109,7 @@ If you don't have a server, Discord lets you [make one in a minute](https://supp
 
 A few more exist (`init`, `install-skill`, `install-hooks`, `disarm`, `arm-status`) — `--help` shows them all.
 
-## Configuration
+## ⚙️ Configuration
 
 The config lives at `~/.claude-watch-notify.json`. `init` writes it for you, but you can edit it by hand any time.
 
@@ -117,7 +131,7 @@ The config lives at `~/.claude-watch-notify.json`. `init` writes it for you, but
 | `summary.maxLength` | `100` | Trim the body to this many characters. `0` = title only. |
 | `summary.includeProjectName` | `true` | Put the project folder name in the title. |
 
-## When something doesn't work
+## 🩹 When something doesn't work
 
 Start with `claude-watch-notify doctor` — it usually points you at the broken step.
 
@@ -129,7 +143,7 @@ Start with `claude-watch-notify doctor` — it usually points you at the broken 
 
 **Notifications at 3 AM.** Set `quietHours.enabled: true` and pick a window. Set `allowHighPriority: false` too if you want to silence input-needed alerts during quiet hours.
 
-## Removing it
+## 🗑️ Removing it
 
 ```bash
 claude-watch-notify uninstall          # asks per item
@@ -139,27 +153,22 @@ npm uninstall -g claude-watch-notify   # the binary itself
 
 `uninstall` only removes hooks it installed (any `command` containing `claude-watch-notify`); anything else in your `~/.claude/settings.json` stays put. It also leaves `*.backup-*` files behind in case you want to undo.
 
-## Security
+## 🔒 Security
 
 - Secrets (`ntfy.authToken`, `telegram.botToken`, `discord.webhookUrl`) never appear in dry-run output or error messages — they're replaced with `[REDACTED]`. Even network error strings are scrubbed.
 - The CLI doesn't run shell commands. All network IO uses Node's built-in `fetch`.
 - Your config file is written with `0600` permissions (only your user can read it).
 - ntfy.sh public topics are world-readable to anyone who guesses the topic name. The default suggestion is 64 bits of entropy (16 hex chars) — unguessable in practice. For sensitive content, use ntfy with an auth token, switch to Telegram or Discord, or self-host ntfy.
 
-## Contributing
+## 🤝 Contributing
 
-Issues and PRs welcome. The project is small on purpose:
-
-- Modules stay under 200 lines each.
-- ES modules only (`import`/`export`).
-- No runtime dependencies — Node ≥18 has everything we need.
+Issues and PRs welcome — the project is small on purpose, no runtime dependencies.
 
 ```bash
 git clone https://github.com/<your-fork>/claude-watch-notify
 cd claude-watch-notify
-npm test
 ```
 
-## License
+## 📄 License
 
 [MIT](LICENSE)
