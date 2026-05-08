@@ -12,6 +12,7 @@ import { runDoctor } from '../src/doctorCommand.js';
 import { runPing } from '../src/pingCommand.js';
 import { runArm, runDisarm, runArmStatus } from '../src/armCommand.js';
 import { runMode } from '../src/modeCommand.js';
+import { runUninstall } from '../src/uninstallCommand.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -62,6 +63,7 @@ Usage:
   claude-watch-notify mode [name]           Show or switch mode (on-demand | armed | always)
   claude-watch-notify install-hooks         Auto-merge hook block into ~/.claude/settings.json
   claude-watch-notify install-skill         Install the notify-on-demand skill
+  claude-watch-notify uninstall             Remove hooks, skill, armed flag, and config
   claude-watch-notify test                  Send a test notification
   claude-watch-notify doctor                Check config, mode, hooks/skill, connectivity
   claude-watch-notify --event Stop          Used by Claude Code hooks (stdin = JSON)
@@ -133,6 +135,8 @@ async function main() {
       return await runArmStatus();
     case 'mode':
       return await runMode({ target: args.positional[1] ?? null });
+    case 'uninstall':
+      return await runUninstall({ assumeYes: args.yes });
   }
 
   // Default: hook handler. Always exit 0 so we never block Claude Code.

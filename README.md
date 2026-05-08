@@ -126,6 +126,7 @@ If your watch isn't listed, the recipe is the same: open your watch's companion 
 | `mode [name]` | Show or switch between `on-demand`, `armed`, `always` |
 | `install-skill` | Install the notify-on-demand skill at `~/.claude/skills/notify-on-demand/SKILL.md` |
 | `install-hooks` | Auto-merge hook block into `~/.claude/settings.json` (shows a diff first) |
+| `uninstall` | Remove hooks (only ours), skill, armed flag, and config — confirms each step. `--yes` skips prompts |
 | `test` | Send a test notification |
 | `test --dry-run` | Print the request without sending |
 | `doctor` | Green/red checklist: config, mode, skill/hooks, network |
@@ -213,6 +214,16 @@ Run `claude-watch-notify doctor` first — it tells you which step is broken.
 - **Hooks never fire** — `claude --debug` and look for hook output. Make sure `claude-watch-notify` is on Claude Code's `PATH`. Or re-run `claude-watch-notify install-hooks`.
 - **Body looks wrong or truncated** — adjust `summary.maxLength`. If the body is empty for Stop events, the transcript reader couldn't find a recent assistant message; harmless.
 - **Notifications at 3am** — set `quietHours.enabled: true` and pick a window. Use `allowHighPriority: false` to silence input-needed alerts too.
+
+## Uninstall
+
+```bash
+claude-watch-notify uninstall          # asks per item: hooks, skill, armed flag, config
+claude-watch-notify uninstall --yes    # remove everything without prompting
+npm uninstall -g claude-watch-notify   # remove the binary itself
+```
+
+`uninstall` only removes hook entries it installed (any line whose `command` includes `claude-watch-notify`). Other hooks, other settings, and any `*.backup-*` files are left untouched.
 
 ## Security notes
 

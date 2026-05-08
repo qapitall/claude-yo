@@ -34,6 +34,81 @@ function entryAlreadyInstalled(matcherEntry) {
   );
 }
 
+function isCwnHook(h) {
+  return (
+    isPlainObject(h) &&
+    typeof h.command === 'string' &&
+    h.command.includes('claude-watch-notify')
+  );
+}
+
+function stripCwnFromMatcher(matcher) {
+  if (!isPlainObject(matcher)) return matcher;
+  const hooks = Array.isArray(matcher.hooks) ? matcher.hooks : [];
+  const remaining = hooks.filter((h) => !isCwnHook(h));
+  if (remaining.length === 0) return null;
+  if (remaining.length === hooks.length) return matcher;
+  return { ...matcher, hooks: remaining };
+}
+
+export function planUninstall(existingSettings) {
+  if (!isPlainObject(existingSettings)) {
+    return {
+      next: {},
+      changes: HOOK_EVENTS.map((e) => ({
+        event: e,
+        action: 'kept',
+        reason: 'no settings file',
+      })),
+    };
+  }
+  const settings = JSON.parse(JSON.stringify(existingSettings));
+  const changes = [];
+
+  if (!isPlainObject(settings.hooks)) {
+    return {
+      next: settings,
+      changes: HOOK_EVENTS.map((e) => ({
+        event: e,
+        action: 'kept',
+        reason: 'no hooks block',
+      })),
+    };
+  }
+
+  for (const ev of HOOK_EVENTS) {
+    const list = Array.isArray(settings.hooks[ev]) ? settings.hooks[ev] : null;
+    if (!list) {
+      changes.push({ event: ev, action: 'kept', reason: 'not installed' });
+      continue;
+    }
+    const filtered = list
+      .map(stripCwnFromMatcher)
+      .filter((m) => m !== null);
+    const before = JSON.stringify(list);
+    const after = JSON.stringify(filtered);
+    if (before === after) {
+      changes.push({
+        event: ev,
+        action: 'kept',
+        reason: 'no claude-watch-notify entry found',
+      });
+    } else {
+      if (filtered.length === 0) delete settings.hooks[ev];
+      else settings.hooks[ev] = filtered;
+      changes.push({ event: ev, action: 'removed' });
+    }
+  }
+
+  if (
+    isPlainObject(settings.hooks) &&
+    Object.keys(settings.hooks).length === 0
+  ) {
+    delete settings.hooks;
+  }
+  return { next: settings, changes };
+}
+
 export function planInstall(existingSettings) {
   const settings = isPlainObject(existingSettings)
     ? JSON.parse(JSON.stringify(existingSettings))
@@ -93,6 +168,55 @@ async function backup(path) {
   } catch {
     return null;
   }
+}
+
+export async function uninstallHooks({
+  path = DEFAULT_SETTINGS_PATH,
+  confirm,
+  out = process.stdout,
+  err = process.stderr,
+} = {}) {
+  const read = await readSettings(path);
+  if (!read.ok) {
+    err.write(`✗ cannot read ${path}: ${read.reason}\n`);
+    return { ok: false, reason: read.reason };
+  }
+  if (!read.exists) {
+    out.write(`(${path} does not exist; nothing to remove)\n`);
+    return { ok: true, changed: false };
+  }
+  const { next, changes } = planUninstall(read.settings);
+  const removedAny = changes.some((c) => c.action === 'removed');
+
+  out.write(`Settings file: ${path}\n\nPlanned changes:\n`);
+  for (const c of changes) {
+    out.write(
+      `  - ${c.event}: ${c.action}${c.reason ? ` (${c.reason})` : ''}\n`,
+    );
+  }
+
+  if (!removedAny) {
+    out.write(`\n✓ No claude-watch-notify hooks found; nothing to remove.\n`);
+    return { ok: true, changed: false };
+  }
+
+  out.write('\nDiff:\n');
+  out.write(diffPreview(read.settings, next) + '\n\n');
+
+  if (typeof confirm === 'function') {
+    const yes = await confirm();
+    if (!yes) {
+      out.write('aborted; nothing written.\n');
+      return { ok: false, reason: 'user declined' };
+    }
+  }
+
+  const bk = await backup(path);
+  if (bk) out.write(`backup written to ${bk}\n`);
+
+  await writeFile(path, JSON.stringify(next, null, 2) + '\n', 'utf8');
+  out.write(`✓ updated ${path}\n`);
+  return { ok: true, changed: true };
 }
 
 export async function installHooks({
