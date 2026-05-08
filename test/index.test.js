@@ -16,6 +16,7 @@ function captureStream() {
 }
 
 const baseConfig = {
+  provider: 'ntfy',
   ntfy: { topic: 'test-topic', server: 'https://ntfy.sh', authToken: null },
   filters: { minDurationSeconds: 0, events: ['Stop', 'Notification'] },
   quietHours: { enabled: false, start: '00:00', end: '00:00', allowHighPriority: true },

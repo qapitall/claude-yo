@@ -11,7 +11,7 @@ import {
   eventPriority,
   isHighPriorityEvent,
 } from './filters.js';
-import { send, buildRequest, redactRequest } from './ntfy.js';
+import * as providers from './providers.js';
 import { loadConfig } from './config.js';
 
 const TITLE_PREFIX = { Stop: '✓', Notification: '⚠' };
@@ -115,14 +115,18 @@ export async function run({
   });
 
   if (dryRun) {
-    const req = buildRequest(config.ntfy, notification);
-    out.write(JSON.stringify(redactRequest(req), null, 2) + '\n');
+    const req = providers.buildRequest(config, notification);
+    out.write(
+      JSON.stringify(providers.redactRequest(config, req), null, 2) + '\n',
+    );
     return { sent: false, reason: 'dry-run', notification };
   }
 
-  const result = await send(config.ntfy, notification);
+  const result = await providers.send(config, notification);
   if (!result.ok) {
-    err.write(`✗ ntfy send failed: ${result.error ?? result.status}\n`);
+    err.write(
+      `✗ ${providers.activeProviderName(config)} send failed: ${result.error ?? result.status}\n`,
+    );
     return { sent: false, reason: result.error ?? `status ${result.status}` };
   }
   return { sent: true, status: result.status, notification };

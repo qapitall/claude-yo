@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir, chmod } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { listProviders, validateProviderConfig } from './providers.js';
 
 export const DEFAULT_CONFIG_PATH = join(
   homedir(),
@@ -8,10 +9,18 @@ export const DEFAULT_CONFIG_PATH = join(
 );
 
 export const DEFAULT_CONFIG = Object.freeze({
+  provider: 'ntfy',
   ntfy: {
     topic: null,
     server: 'https://ntfy.sh',
     authToken: null,
+  },
+  discord: {
+    webhookUrl: null,
+  },
+  telegram: {
+    botToken: null,
+    chatId: null,
   },
   filters: {
     minDurationSeconds: 30,
@@ -84,23 +93,20 @@ export async function loadConfig(path = DEFAULT_CONFIG_PATH) {
 
 export function validateConfig(config) {
   if (!isPlainObject(config)) return { ok: false, reason: 'config not object' };
-  if (!isPlainObject(config.ntfy)) {
-    return { ok: false, reason: 'ntfy section missing' };
+  const provider = config.provider ?? 'ntfy';
+  if (!listProviders().includes(provider)) {
+    return {
+      ok: false,
+      reason: `unknown provider "${provider}" (must be one of: ${listProviders().join(', ')})`,
+    };
   }
-  if (typeof config.ntfy.topic !== 'string' || config.ntfy.topic === '') {
-    return { ok: false, reason: 'ntfy.topic is required' };
-  }
-  if (typeof config.ntfy.server !== 'string' || config.ntfy.server === '') {
-    return { ok: false, reason: 'ntfy.server is required' };
-  }
-  return { ok: true };
+  return validateProviderConfig(config);
 }
 
 export async function saveConfig(config, path = DEFAULT_CONFIG_PATH) {
   await mkdir(dirname(path), { recursive: true });
   const json = JSON.stringify(config, null, 2) + '\n';
   await writeFile(path, json, 'utf8');
-  // 0600 — secrets like authToken should not be world-readable.
   await chmod(path, 0o600).catch(() => {});
   return path;
 }
@@ -108,5 +114,12 @@ export async function saveConfig(config, path = DEFAULT_CONFIG_PATH) {
 export function redactForDisplay(config) {
   const c = JSON.parse(JSON.stringify(config));
   if (c?.ntfy?.authToken) c.ntfy.authToken = '[REDACTED]';
+  if (c?.telegram?.botToken) c.telegram.botToken = '[REDACTED]';
+  if (c?.discord?.webhookUrl) {
+    c.discord.webhookUrl = c.discord.webhookUrl.replace(
+      /(\/api\/webhooks\/\d+\/)[A-Za-z0-9_-]+/,
+      '$1[REDACTED]',
+    );
+  }
   return c;
 }
