@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { loadConfig, DEFAULT_CONFIG_PATH } from './config.js';
 import { DEFAULT_SETTINGS_PATH, HOOK_EVENTS } from './hookInstaller.js';
+import { isArmed, readArmState, DEFAULT_ARM_PATH } from './armState.js';
 import * as providers from './providers.js';
 
 const TEST_NOTIFICATION = {
@@ -28,14 +29,58 @@ async function checkConfig(report) {
     return null;
   }
   const providerName = providers.activeProviderName(cfg.config);
+  const mode = cfg.config.mode ?? 'on-demand';
   report.push({
     ok: true,
-    label: `config file at ${DEFAULT_CONFIG_PATH} (provider: ${providerName})`,
+    label: `config file at ${DEFAULT_CONFIG_PATH} (mode: ${mode}, provider: ${providerName})`,
   });
   return cfg.config;
 }
 
-async function checkHooks(report) {
+async function checkSkill(config, report) {
+  const mode = config?.mode ?? 'on-demand';
+  if (mode !== 'on-demand') return;
+  const { homedir } = await import('node:os');
+  const { join } = await import('node:path');
+  const skillPath = join(
+    homedir(),
+    '.claude',
+    'skills',
+    'notify-on-demand',
+    'SKILL.md',
+  );
+  try {
+    await readFile(skillPath);
+    report.push({ ok: true, label: `notify-on-demand skill at ${skillPath}` });
+  } catch {
+    report.push({
+      ok: false,
+      label: `notify-on-demand skill at ${skillPath}`,
+      hint: 'Run: claude-watch-notify install-skill',
+    });
+  }
+}
+
+async function checkArmedState(config, report) {
+  if ((config?.mode ?? 'on-demand') !== 'armed') return;
+  const armed = await isArmed();
+  if (armed) {
+    const state = await readArmState();
+    report.push({
+      ok: true,
+      label: `armed at ${state?.armedAt ?? 'unknown time'} (${DEFAULT_ARM_PATH})`,
+    });
+  } else {
+    report.push({
+      ok: true,
+      label: `not currently armed (run "arm" before your next long task)`,
+    });
+  }
+}
+
+async function checkHooks(config, report) {
+  const mode = config?.mode ?? 'on-demand';
+  if (mode === 'on-demand') return;
   let raw;
   try {
     raw = await readFile(DEFAULT_SETTINGS_PATH, 'utf8');
@@ -107,7 +152,9 @@ export async function runDoctor({ skipSend = false } = {}) {
   const report = [];
 
   const config = await checkConfig(report);
-  await checkHooks(report);
+  await checkSkill(config, report);
+  await checkHooks(config, report);
+  await checkArmedState(config, report);
   if (!skipSend) await checkSend(config, report);
 
   for (const r of report) {

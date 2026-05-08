@@ -13,6 +13,7 @@ import {
 } from './filters.js';
 import * as providers from './providers.js';
 import { loadConfig } from './config.js';
+import { isArmed, disarm, readArmState } from './armState.js';
 
 const TITLE_PREFIX = { Stop: '✓', Notification: '⚠' };
 const TAGS_BY_EVENT = {
@@ -74,13 +75,31 @@ export async function run({
   now = new Date(),
   out = process.stdout,
   err = process.stderr,
+  armChecker = isArmed,
+  armReader = readArmState,
+  armClearer = disarm,
 } = {}) {
+  const mode = config.mode ?? 'on-demand';
+
+  if (mode === 'on-demand') {
+    err.write('⚠ on-demand mode: use `claude-watch-notify ping` instead\n');
+    return { sent: false, reason: 'on-demand mode (use ping)' };
+  }
+
   const parsed = parseHookPayload(rawStdin ?? '');
   if (!parsed.ok) {
     err.write(`⚠ ${parsed.reason}\n`);
     return { sent: false, reason: parsed.reason };
   }
   const { payload } = parsed;
+
+  let armPayload = null;
+  if (mode === 'armed') {
+    if (!(await armChecker())) {
+      return { sent: false, reason: 'not armed' };
+    }
+    armPayload = await armReader();
+  }
 
   let transcriptInfo = null;
   if (payload.transcriptPath) {
@@ -95,17 +114,21 @@ export async function run({
     quietHours: { ...(config.quietHours ?? {}), __inRange: inRange },
   };
 
-  const decision = shouldSend(
-    {
-      event: payload.event,
-      durationSec,
-      isHighPriority: isHighPriorityEvent(payload.event),
-    },
-    cfgWithRange,
-  );
-  if (!decision.send) {
-    err.write(`⚠ skipped: ${decision.reason}\n`);
-    return { sent: false, reason: decision.reason };
+  // Armed mode: user explicitly asked to be pinged. Bypass filters
+  // (minDuration / allowlist) but still respect quiet hours.
+  if (mode === 'always') {
+    const decision = shouldSend(
+      {
+        event: payload.event,
+        durationSec,
+        isHighPriority: isHighPriorityEvent(payload.event),
+      },
+      cfgWithRange,
+    );
+    if (!decision.send) {
+      err.write(`⚠ skipped: ${decision.reason}\n`);
+      return { sent: false, reason: decision.reason };
+    }
   }
 
   const notification = await buildNotification({
@@ -113,6 +136,11 @@ export async function run({
     config,
     transcriptInfo,
   });
+
+  // If user passed --message to `arm`, prefer it as the body.
+  if (armPayload && typeof armPayload.message === 'string' && armPayload.message !== '') {
+    notification.body = armPayload.message.slice(0, config.summary?.maxLength ?? 100);
+  }
 
   if (dryRun) {
     const req = providers.buildRequest(config, notification);
@@ -128,6 +156,9 @@ export async function run({
       `✗ ${providers.activeProviderName(config)} send failed: ${result.error ?? result.status}\n`,
     );
     return { sent: false, reason: result.error ?? `status ${result.status}` };
+  }
+  if (mode === 'armed') {
+    await armClearer().catch(() => {});
   }
   return { sent: true, status: result.status, notification };
 }

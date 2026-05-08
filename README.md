@@ -1,6 +1,6 @@
 # claude-watch-notify
 
-Get a notification on your smartwatch when Claude Code finishes a task or needs your input.
+Get a notification on your smartwatch when Claude Code finishes a task — but only when you ask for it.
 
 ## Quick start
 
@@ -9,12 +9,28 @@ npm install -g claude-watch-notify
 claude-watch-notify setup
 ```
 
-`setup` runs three steps in one:
-1. **init** — pick a provider, fill in a few fields.
-2. **install-hooks** — auto-merges the `Stop` and `Notification` hooks into your `~/.claude/settings.json` (with a diff preview and a backup of the previous file).
-3. **test** — sends a real notification so you confirm everything works end-to-end.
+`setup` walks you through:
+1. **init** — pick a mode, pick a provider, fill in a few fields.
+2. **install-skill** (or **install-hooks**, depending on mode) — wires Claude Code into the notifier.
+3. **test** — sends a real notification so you confirm everything works.
+
+After that, in any Claude Code conversation just say:
+
+> "Run the test suite and **ping me when it's done**."
+
+Claude finishes the work, runs `claude-watch-notify ping` once, and your watch buzzes. No notification on every short reply.
 
 If something doesn't work, run `claude-watch-notify doctor` for a green/red checklist.
+
+## Three modes
+
+| Mode | When notifications fire | Best for |
+|---|---|---|
+| **on-demand** (default) | Only when you say "ping me" — Claude runs `ping` once at the end of the turn. | Most users. Zero noise. |
+| **armed** | Only after you run `claude-watch-notify arm`. The next Stop or Notification hook fires once and disarms. | Long, well-defined tasks where you don't want to involve Claude in the decision. |
+| **always** | On every Stop and Notification hook (still filtered by `minDurationSeconds` and quiet hours). | Power users who want to be told about every task. |
+
+Switch any time with `claude-watch-notify mode <on-demand|armed|always>`.
 
 ## Why?
 
@@ -102,20 +118,43 @@ If your watch isn't listed, the recipe is the same: open your watch's companion 
 
 | Command | What it does |
 |---|---|
-| `setup` | One-shot: init + install-hooks + test |
+| `setup` | One-shot: init + (install-skill or install-hooks) + test |
 | `init` | Interactive config setup |
+| `ping [--message TXT]` | Send a one-shot notification immediately (used by the skill) |
+| `arm [--message TXT]` | Arm: next hook fires once. Only effective in `armed` mode |
+| `disarm` | Clear armed state |
+| `mode [name]` | Show or switch between `on-demand`, `armed`, `always` |
+| `install-skill` | Install the notify-on-demand skill at `~/.claude/skills/notify-on-demand/SKILL.md` |
 | `install-hooks` | Auto-merge hook block into `~/.claude/settings.json` (shows a diff first) |
 | `test` | Send a test notification |
 | `test --dry-run` | Print the request without sending |
-| `doctor` | Green/red checklist: config, hooks, network |
+| `doctor` | Green/red checklist: config, mode, skill/hooks, network |
 | `--event Stop` / `--event Notification` | Used by Claude Code hooks; pipe JSON over stdin |
 | `--help`, `--version` | Self-explanatory |
 
-`install-hooks` is **idempotent**: running it twice does not duplicate. It also creates a `settings.json.backup-<timestamp>` before overwriting.
+Both `install-hooks` and `install-skill` are **idempotent**: running them twice does not duplicate. They create `*.backup-<timestamp>` of the previous file before overwriting.
 
-## Hook setup (manual, if you'd rather)
+## How on-demand works
 
-If you don't want to use `install-hooks`, paste this into your Claude Code `~/.claude/settings.json`:
+When you run `install-skill`, it places a [SKILL.md](skills/notify-on-demand/SKILL.md) file under `~/.claude/skills/notify-on-demand/`. Claude Code reads that skill on every session. It tells Claude:
+
+> When the user says "ping me when this is done" (or similar), finish the work, then run `claude-watch-notify ping --message "<one-line summary>"` once before your final reply.
+
+There are no hooks installed in `on-demand` mode, so nothing fires automatically. The notification only happens when Claude (acting on your explicit request) runs `ping`.
+
+## How armed mode works
+
+```bash
+claude-watch-notify arm --message "deploy finished"   # before starting a long task
+# … Claude does the work …
+# the next Stop hook fires once, sends the notification, and disarms itself
+```
+
+If a hook fires and the system isn't armed, nothing happens. This is useful for tasks where you'd rather not rely on Claude remembering to ping.
+
+## Hook setup (manual, only for `armed` or `always` mode)
+
+In `on-demand` mode you don't need any hooks. For `armed` or `always` mode, run `claude-watch-notify install-hooks`. If you'd rather edit by hand, paste this into your Claude Code `~/.claude/settings.json`:
 
 ```json
 {
@@ -148,6 +187,7 @@ Config file: `~/.claude-watch-notify.json`. Run `claude-watch-notify init` to cr
 
 | Path | Type | Default | Meaning |
 |---|---|---|---|
+| `mode` | `"on-demand"` \| `"armed"` \| `"always"` | `"on-demand"` | When notifications fire (see "Three modes" above) |
 | `provider` | `"ntfy"` \| `"discord"` \| `"telegram"` | `"ntfy"` | Which provider sends the notification |
 | `ntfy.topic` | string | (required for ntfy) | The ntfy topic name |
 | `ntfy.server` | string | `https://ntfy.sh` | Override for self-hosted ntfy |

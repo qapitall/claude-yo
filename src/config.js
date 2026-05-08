@@ -8,7 +8,10 @@ export const DEFAULT_CONFIG_PATH = join(
   '.claude-watch-notify.json',
 );
 
+export const VALID_MODES = ['on-demand', 'armed', 'always'];
+
 export const DEFAULT_CONFIG = Object.freeze({
+  mode: 'on-demand',
   provider: 'ntfy',
   ntfy: {
     topic: null,
@@ -93,6 +96,13 @@ export async function loadConfig(path = DEFAULT_CONFIG_PATH) {
 
 export function validateConfig(config) {
   if (!isPlainObject(config)) return { ok: false, reason: 'config not object' };
+  const mode = config.mode ?? 'on-demand';
+  if (!VALID_MODES.includes(mode)) {
+    return {
+      ok: false,
+      reason: `unknown mode "${mode}" (must be one of: ${VALID_MODES.join(', ')})`,
+    };
+  }
   const provider = config.provider ?? 'ntfy';
   if (!listProviders().includes(provider)) {
     return {

@@ -107,7 +107,7 @@ function settingsSnippet() {
   );
 }
 
-function postInstallHints(provider, providerCfg) {
+function postInstallHints(provider, providerCfg, mode = 'on-demand') {
   output.write('\nNext steps:\n');
   if (provider === 'ntfy') {
     const url = `${providerCfg.server.replace(/\/+$/, '')}/${providerCfg.topic}`;
@@ -135,11 +135,27 @@ function postInstallHints(provider, providerCfg) {
   output.write(
     `  3. Confirm your watch's companion app mirrors that app's notifications (see README "Smartwatch setup").\n`,
   );
-  output.write(
-    `  4. Install the Claude Code hook automatically: claude-watch-notify install-hooks\n`,
-  );
-  output.write(`     (or paste the snippet below into ~/.claude/settings.json):\n\n`);
-  output.write(settingsSnippet() + '\n\n');
+  if (mode === 'on-demand') {
+    output.write(
+      `  4. Install the on-demand skill so Claude can ping you when you ask:\n`,
+    );
+    output.write(`       claude-watch-notify install-skill\n`);
+    output.write(
+      `     Then in chat just say "ping me when this is done" and Claude will run\n` +
+        `     "claude-watch-notify ping" automatically at the end.\n`,
+    );
+  } else {
+    output.write(
+      `  4. Install the Claude Code hook automatically: claude-watch-notify install-hooks\n`,
+    );
+    output.write(`     (or paste the snippet below into ~/.claude/settings.json):\n\n`);
+    output.write(settingsSnippet() + '\n\n');
+    if (mode === 'armed') {
+      output.write(
+        `     Mode "armed": run "claude-watch-notify arm" before a long task; the next hook fires once.\n`,
+      );
+    }
+  }
   output.write(
     `  5. Send a test notification: claude-watch-notify test\n`,
   );
@@ -153,6 +169,19 @@ export async function runInit() {
   );
 
   try {
+    output.write(
+      'Mode controls when notifications fire:\n' +
+        '  on-demand  — only when you (or Claude on your behalf) call `ping`. Recommended.\n' +
+        '  armed      — only after `arm`; the next hook fires once and disarms.\n' +
+        '  always     — every Stop/Notification hook (filtered by minDurationSeconds).\n\n',
+    );
+    const mode = await askChoice(
+      rl,
+      'Which mode?',
+      ['on-demand', 'armed', 'always'],
+      'on-demand',
+    );
+
     const provider = await askChoice(
       rl,
       'Which provider?',
@@ -179,6 +208,7 @@ export async function runInit() {
     }
 
     const config = {
+      mode,
       provider,
       ntfy: { ...DEFAULT_CONFIG.ntfy },
       discord: { ...DEFAULT_CONFIG.discord },
@@ -202,7 +232,7 @@ export async function runInit() {
     const path = await saveConfig(config, DEFAULT_CONFIG_PATH);
     output.write(`\n✓ wrote ${path}\n`);
 
-    postInstallHints(provider, providerSection);
+    postInstallHints(provider, providerSection, mode);
     return 0;
   } catch (err) {
     output.write(`\n⚠ init aborted: ${err?.message ?? err}\n`);

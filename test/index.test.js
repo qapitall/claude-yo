@@ -16,6 +16,7 @@ function captureStream() {
 }
 
 const baseConfig = {
+  mode: 'always',
   provider: 'ntfy',
   ntfy: { topic: 'test-topic', server: 'https://ntfy.sh', authToken: null },
   filters: { minDurationSeconds: 0, events: ['Stop', 'Notification'] },
@@ -136,7 +137,7 @@ test('run: dry-run redacts authToken in printed request', async () => {
   assert.ok(!printed.includes('super-secret'));
 });
 
-test('run: event not in allowlist is skipped', async () => {
+test('run: event not in allowlist is skipped (always mode)', async () => {
   const cfg = {
     ...baseConfig,
     filters: { minDurationSeconds: 0, events: ['Stop'] },
@@ -150,4 +151,93 @@ test('run: event not in allowlist is skipped', async () => {
   });
   assert.equal(r.sent, false);
   assert.match(r.reason, /allowlist/);
+});
+
+test('run: on-demand mode skips immediately without parsing', async () => {
+  const cfg = { ...baseConfig, mode: 'on-demand' };
+  const err = captureStream();
+  const r = await run({
+    rawStdin: JSON.stringify({ hook_event_name: 'Stop' }),
+    config: cfg,
+    err,
+    out: captureStream(),
+  });
+  assert.equal(r.sent, false);
+  assert.match(r.reason, /on-demand/);
+});
+
+test('run: armed mode skips when not armed', async () => {
+  const cfg = { ...baseConfig, mode: 'armed' };
+  const r = await run({
+    rawStdin: JSON.stringify({ hook_event_name: 'Stop', cwd: '/tmp/x' }),
+    config: cfg,
+    err: captureStream(),
+    out: captureStream(),
+    armChecker: async () => false,
+    armReader: async () => null,
+    armClearer: async () => true,
+  });
+  assert.equal(r.sent, false);
+  assert.match(r.reason, /not armed/);
+});
+
+test('run: armed mode bypasses filter allowlist', async () => {
+  const cfg = {
+    ...baseConfig,
+    mode: 'armed',
+    filters: { minDurationSeconds: 9999, events: [] },
+  };
+  let cleared = false;
+  const out = captureStream();
+  const r = await run({
+    rawStdin: JSON.stringify({ hook_event_name: 'Stop', cwd: '/tmp/x' }),
+    config: cfg,
+    dryRun: true,
+    err: captureStream(),
+    out,
+    armChecker: async () => true,
+    armReader: async () => ({ message: 'arm-msg' }),
+    armClearer: async () => {
+      cleared = true;
+      return true;
+    },
+  });
+  assert.equal(r.sent, false); // dry-run
+  assert.equal(r.reason, 'dry-run');
+  // Body should come from arm message
+  const obj = JSON.parse(out.read());
+  assert.equal(obj.body.message, 'arm-msg');
+});
+
+test('run: armed mode clears arm state after successful send', async () => {
+  let cleared = false;
+  let fetchCalled = false;
+  const fetchImpl = async () => {
+    fetchCalled = true;
+    return { ok: true, status: 200 };
+  };
+  // Inject fetch via a custom config? No — providers.send uses globalThis.fetch.
+  // We override it temporarily.
+  const orig = globalThis.fetch;
+  globalThis.fetch = fetchImpl;
+  try {
+    const cfg = { ...baseConfig, mode: 'armed' };
+    const r = await run({
+      rawStdin: JSON.stringify({ hook_event_name: 'Stop', cwd: '/tmp/x' }),
+      config: cfg,
+      err: captureStream(),
+      out: captureStream(),
+      armChecker: async () => true,
+      armReader: async () => ({}),
+      armClearer: async () => {
+        cleared = true;
+        return true;
+      },
+    });
+    assert.equal(r.sent, true);
+    assert.equal(fetchCalled, true);
+    assert.equal(cleared, true);
+  } finally {
+    globalThis.fetch = orig;
+  }
 });

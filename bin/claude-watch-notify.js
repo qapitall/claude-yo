@@ -6,8 +6,12 @@ import { runFromHook } from '../src/index.js';
 import { runInit } from '../src/initCommand.js';
 import { runTest } from '../src/testCommand.js';
 import { runInstallHooks } from '../src/installHooksCommand.js';
+import { runInstallSkill } from '../src/installSkillCommand.js';
 import { runSetup } from '../src/setupCommand.js';
 import { runDoctor } from '../src/doctorCommand.js';
+import { runPing } from '../src/pingCommand.js';
+import { runArm, runDisarm, runArmStatus } from '../src/armCommand.js';
+import { runMode } from '../src/modeCommand.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -15,12 +19,15 @@ function parseArgs(argv) {
   const args = {
     command: null,
     event: null,
+    message: null,
+    title: null,
+    priority: null,
     dryRun: false,
     yes: false,
     help: false,
     version: false,
+    positional: [],
   };
-  const positional = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--help' || a === '-h') args.help = true;
@@ -29,9 +36,17 @@ function parseArgs(argv) {
     else if (a === '--yes' || a === '-y') args.yes = true;
     else if (a === '--event') args.event = argv[++i] ?? null;
     else if (a.startsWith('--event=')) args.event = a.slice('--event='.length);
-    else if (!a.startsWith('-')) positional.push(a);
+    else if (a === '--message' || a === '-m') args.message = argv[++i] ?? null;
+    else if (a.startsWith('--message='))
+      args.message = a.slice('--message='.length);
+    else if (a === '--title') args.title = argv[++i] ?? null;
+    else if (a.startsWith('--title=')) args.title = a.slice('--title='.length);
+    else if (a === '--priority') args.priority = argv[++i] ?? null;
+    else if (a.startsWith('--priority='))
+      args.priority = a.slice('--priority='.length);
+    else if (!a.startsWith('-')) args.positional.push(a);
   }
-  if (positional[0]) args.command = positional[0];
+  if (args.positional[0]) args.command = args.positional[0];
   return args;
 }
 
@@ -39,23 +54,32 @@ function printHelp() {
   process.stdout.write(`claude-watch-notify - smartwatch notifications for Claude Code
 
 Usage:
-  claude-watch-notify setup                 One-shot init + install-hooks + test
+  claude-watch-notify setup                 One-shot init + (skill or hooks) + test
   claude-watch-notify init                  Interactive config setup
+  claude-watch-notify ping [--message TXT]  Send a one-shot notification (used by the skill)
+  claude-watch-notify arm [--message TXT]   Arm: next hook fires once (only in armed mode)
+  claude-watch-notify disarm                Clear armed state
+  claude-watch-notify mode [name]           Show or switch mode (on-demand | armed | always)
   claude-watch-notify install-hooks         Auto-merge hook block into ~/.claude/settings.json
+  claude-watch-notify install-skill         Install the notify-on-demand skill
   claude-watch-notify test                  Send a test notification
-  claude-watch-notify doctor                Check config, hooks, and connectivity
-  claude-watch-notify --event Stop          Send notification for a Stop hook
-  claude-watch-notify --event Notification  Send notification for an input-needed hook
+  claude-watch-notify doctor                Check config, mode, hooks/skill, connectivity
+  claude-watch-notify --event Stop          Used by Claude Code hooks (stdin = JSON)
   claude-watch-notify --dry-run             Print the request without sending
   claude-watch-notify --help                Show this help
   claude-watch-notify --version             Show version
 
-Flags:
-  --yes, -y       Non-interactive: auto-confirm prompts (e.g. install-hooks)
-  --dry-run       Show what would be sent instead of sending
+Modes:
+  on-demand  Notifications fire only via "ping" (or the notify-on-demand skill). Default.
+  armed      Notifications fire only after "arm"; the next hook fires once and disarms.
+  always     Notifications fire on every Stop/Notification hook (filtered by minDurationSeconds).
 
-In a hook, Claude Code pipes a JSON payload over stdin. The CLI never blocks
-the hook: it always exits 0 and prints any errors to stderr.
+Flags:
+  --message, -m   Message body for ping/arm
+  --title         Title for ping
+  --priority      Priority for ping (low | default | high | urgent)
+  --yes, -y       Non-interactive: auto-confirm prompts
+  --dry-run       Show what would be sent instead of sending
 `);
 }
 
@@ -80,12 +104,36 @@ async function main() {
     process.stdout.write((await readVersion()) + '\n');
     return 0;
   }
-  if (args.command === 'init') return await runInit();
-  if (args.command === 'setup') return await runSetup();
-  if (args.command === 'install-hooks')
-    return await runInstallHooks({ assumeYes: args.yes });
-  if (args.command === 'test') return await runTest({ dryRun: args.dryRun });
-  if (args.command === 'doctor') return await runDoctor();
+
+  switch (args.command) {
+    case 'init':
+      return await runInit();
+    case 'setup':
+      return await runSetup();
+    case 'install-hooks':
+      return await runInstallHooks({ assumeYes: args.yes });
+    case 'install-skill':
+      return await runInstallSkill({ assumeYes: args.yes });
+    case 'test':
+      return await runTest({ dryRun: args.dryRun });
+    case 'doctor':
+      return await runDoctor();
+    case 'ping':
+      return await runPing({
+        message: args.message ?? '',
+        title: args.title ?? '',
+        priority: args.priority ?? 'default',
+        dryRun: args.dryRun,
+      });
+    case 'arm':
+      return await runArm({ message: args.message ?? '' });
+    case 'disarm':
+      return await runDisarm();
+    case 'arm-status':
+      return await runArmStatus();
+    case 'mode':
+      return await runMode({ target: args.positional[1] ?? null });
+  }
 
   // Default: hook handler. Always exit 0 so we never block Claude Code.
   await runFromHook({ event: args.event, dryRun: args.dryRun });
