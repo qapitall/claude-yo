@@ -82,7 +82,7 @@ export async function run({
   const mode = config.mode ?? 'on-demand';
 
   if (mode === 'on-demand') {
-    err.write('⚠ on-demand mode: use `claude-watch-notify ping` instead\n');
+    err.write('⚠ on-demand mode: use `claude-yo ping` instead\n');
     return { sent: false, reason: 'on-demand mode (use ping)' };
   }
 

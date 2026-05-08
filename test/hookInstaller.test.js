@@ -13,7 +13,7 @@ import {
 } from '../src/hookInstaller.js';
 
 async function withTempDir(fn) {
-  const dir = await mkdtemp(join(tmpdir(), 'cwn-hooks-'));
+  const dir = await mkdtemp(join(tmpdir(), 'cyo-hooks-'));
   try {
     return await fn(dir);
   } finally {
@@ -43,11 +43,11 @@ test('planInstall: empty settings → adds Stop and Notification', () => {
   for (const ev of HOOK_EVENTS) {
     assert.ok(Array.isArray(next.hooks[ev]));
     assert.equal(next.hooks[ev].length, 1);
-    assert.match(next.hooks[ev][0].hooks[0].command, /claude-watch-notify/);
+    assert.match(next.hooks[ev][0].hooks[0].command, /claude-yo/);
   }
 });
 
-test('planInstall: existing claude-watch hooks are kept (idempotent)', () => {
+test('planInstall: existing claude-yo hooks are kept (idempotent)', () => {
   const existing = {
     hooks: {
       Stop: [
@@ -56,7 +56,7 @@ test('planInstall: existing claude-watch hooks are kept (idempotent)', () => {
           hooks: [
             {
               type: 'command',
-              command: 'claude-watch-notify --event Stop',
+              command: 'claude-yo --event Stop',
               timeout: 8,
             },
           ],
@@ -84,10 +84,10 @@ test('planInstall: preserves unrelated existing hooks', () => {
     },
   };
   const { next } = planInstall(existing);
-  // Both the existing one and the new claude-watch-notify entry exist.
+  // Both the existing one and the new claude-yo entry exist.
   assert.equal(next.hooks.Stop.length, 2);
   assert.equal(next.hooks.Stop[0].hooks[0].command, 'echo other');
-  assert.match(next.hooks.Stop[1].hooks[0].command, /claude-watch-notify/);
+  assert.match(next.hooks.Stop[1].hooks[0].command, /claude-yo/);
 });
 
 test('installHooks: writes file when missing and confirm returns true', async () => {
@@ -171,7 +171,7 @@ test('installHooks: backs up existing file before overwriting', async () => {
   });
 });
 
-test('planUninstall: removes only claude-watch-notify entries', () => {
+test('planUninstall: removes only claude-yo entries', () => {
   const existing = {
     hooks: {
       Stop: [
@@ -179,7 +179,7 @@ test('planUninstall: removes only claude-watch-notify entries', () => {
         {
           matcher: '*',
           hooks: [
-            { type: 'command', command: 'claude-watch-notify --event Stop' },
+            { type: 'command', command: 'claude-yo --event Stop' },
           ],
         },
       ],
@@ -189,7 +189,7 @@ test('planUninstall: removes only claude-watch-notify entries', () => {
           hooks: [
             {
               type: 'command',
-              command: 'claude-watch-notify --event Notification',
+              command: 'claude-yo --event Notification',
             },
           ],
         },
@@ -215,7 +215,7 @@ test('planUninstall: empty hooks block gets dropped', () => {
         {
           matcher: '*',
           hooks: [
-            { type: 'command', command: 'claude-watch-notify --event Stop' },
+            { type: 'command', command: 'claude-yo --event Stop' },
           ],
         },
       ],
@@ -225,7 +225,7 @@ test('planUninstall: empty hooks block gets dropped', () => {
           hooks: [
             {
               type: 'command',
-              command: 'claude-watch-notify --event Notification',
+              command: 'claude-yo --event Notification',
             },
           ],
         },
@@ -246,7 +246,7 @@ test('planUninstall: keeps unrelated entries within a single matcher', () => {
           matcher: '*',
           hooks: [
             { type: 'command', command: 'echo other' },
-            { type: 'command', command: 'claude-watch-notify --event Stop' },
+            { type: 'command', command: 'claude-yo --event Stop' },
           ],
         },
       ],
@@ -269,7 +269,7 @@ test('uninstallHooks: removes our hooks, leaves others alone', async () => {
             {
               matcher: '*',
               hooks: [
-                { type: 'command', command: 'claude-watch-notify --event Stop' },
+                { type: 'command', command: 'claude-yo --event Stop' },
               ],
             },
           ],
@@ -296,7 +296,7 @@ test('uninstallHooks: removes our hooks, leaves others alone', async () => {
   });
 });
 
-test('uninstallHooks: no-op when no claude-watch-notify hooks exist', async () => {
+test('uninstallHooks: no-op when no claude-yo hooks exist', async () => {
   await withTempDir(async (dir) => {
     const path = join(dir, 'settings.json');
     await writeFile(path, JSON.stringify({ hooks: { Stop: [] } }));

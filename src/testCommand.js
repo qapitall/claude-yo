@@ -2,7 +2,7 @@ import { loadConfig } from './config.js';
 import * as providers from './providers.js';
 
 const TEST_NOTIFICATION = {
-  title: '✓ claude-watch-notify - Test successful',
+  title: '✓ claude-yo - Test successful',
   body: 'If you see this, the bridge works.',
   priority: 'default',
   tags: ['white_check_mark', 'robot'],
@@ -19,7 +19,7 @@ export async function runTest({ dryRun = false } = {}) {
   if (!cfg.ok) {
     process.stderr.write(`✗ ${cfg.reason}\n`);
     process.stderr.write(
-      `Run "claude-watch-notify init" to create a config first.\n`,
+      `Run "claude-yo init" to create a config first.\n`,
     );
     return 1;
   }

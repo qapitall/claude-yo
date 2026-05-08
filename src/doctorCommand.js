@@ -5,7 +5,7 @@ import { isArmed, readArmState, DEFAULT_ARM_PATH } from './armState.js';
 import * as providers from './providers.js';
 
 const TEST_NOTIFICATION = {
-  title: '✓ claude-watch-notify - doctor check',
+  title: '✓ claude-yo - doctor check',
   body: 'doctor command verified the bridge.',
   priority: 'default',
   tags: ['white_check_mark', 'robot'],
@@ -23,7 +23,7 @@ async function checkConfig(report) {
       label: `config file at ${DEFAULT_CONFIG_PATH}`,
       hint:
         cfg.reason === 'config not found'
-          ? 'Run: claude-watch-notify init'
+          ? 'Run: claude-yo init'
           : `Reason: ${cfg.reason}`,
     });
     return null;
@@ -56,7 +56,7 @@ async function checkSkill(config, report) {
     report.push({
       ok: false,
       label: `notify-on-demand skill at ${skillPath}`,
-      hint: 'Run: claude-watch-notify install-skill',
+      hint: 'Run: claude-yo install-skill',
     });
   }
 }
@@ -88,7 +88,7 @@ async function checkHooks(config, report) {
     report.push({
       ok: false,
       label: `hooks installed in ${DEFAULT_SETTINGS_PATH}`,
-      hint: 'Run: claude-watch-notify install-hooks',
+      hint: 'Run: claude-yo install-hooks',
     });
     return;
   }
@@ -111,7 +111,7 @@ async function checkHooks(config, report) {
       entry.hooks.some(
         (h) =>
           typeof h?.command === 'string' &&
-          h.command.includes('claude-watch-notify'),
+          h.command.includes('claude-yo'),
       ),
     );
   });
@@ -125,7 +125,7 @@ async function checkHooks(config, report) {
     report.push({
       ok: false,
       label: `hooks installed in ${DEFAULT_SETTINGS_PATH}`,
-      hint: `missing for: ${missing.join(', ')}. Run: claude-watch-notify install-hooks`,
+      hint: `missing for: ${missing.join(', ')}. Run: claude-yo install-hooks`,
     });
   }
 }
@@ -148,7 +148,7 @@ async function checkSend(config, report) {
 }
 
 export async function runDoctor({ skipSend = false } = {}) {
-  process.stdout.write('claude-watch-notify doctor\n\n');
+  process.stdout.write('claude-yo doctor\n\n');
   const report = [];
 
   const config = await checkConfig(report);

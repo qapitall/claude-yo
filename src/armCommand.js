@@ -10,7 +10,7 @@ export async function runArm({ message = '' } = {}) {
         `⚠ current mode is "${mode}" — armed flag will be ignored unless you switch.\n`,
       );
       process.stderr.write(
-        `   Run: claude-watch-notify mode armed\n`,
+        `   Run: claude-yo mode armed\n`,
       );
     }
   }

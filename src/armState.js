@@ -2,7 +2,7 @@ import { readFile, writeFile, unlink, stat, chmod } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-export const DEFAULT_ARM_PATH = join(homedir(), '.claude-watch-notify.armed');
+export const DEFAULT_ARM_PATH = join(homedir(), '.claude-yo.armed');
 
 export async function arm(message = '', path = DEFAULT_ARM_PATH) {
   const payload = JSON.stringify(

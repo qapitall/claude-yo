@@ -42,9 +42,9 @@ function makeConfirmer(rl, assumeYes) {
 }
 
 export async function runUninstall({ assumeYes = false } = {}) {
-  output.write('claude-watch-notify uninstall\n\n');
+  output.write('claude-yo uninstall\n\n');
   output.write('Will check the following items:\n');
-  output.write(`  1. claude-watch-notify hooks in ${DEFAULT_SETTINGS_PATH}\n`);
+  output.write(`  1. claude-yo hooks in ${DEFAULT_SETTINGS_PATH}\n`);
   output.write(`  2. notify-on-demand skill at ${SKILL_PATH}\n`);
   output.write(`  3. armed flag at ${DEFAULT_ARM_PATH}\n`);
   output.write(`  4. config at ${DEFAULT_CONFIG_PATH}\n\n`);
@@ -54,7 +54,7 @@ export async function runUninstall({ assumeYes = false } = {}) {
     const ask = makeConfirmer(rl, assumeYes);
 
     output.write('--- 1. Hooks ---\n');
-    const proceedHooks = await ask('Remove claude-watch-notify hooks?');
+    const proceedHooks = await ask('Remove claude-yo hooks?');
     if (proceedHooks) {
       await uninstallHooks({
         confirm: async () => true,
@@ -108,7 +108,7 @@ export async function runUninstall({ assumeYes = false } = {}) {
 
     output.write('\n✓ uninstall complete.\n');
     output.write('To remove the binary itself:\n');
-    output.write('  npm uninstall -g claude-watch-notify\n');
+    output.write('  npm uninstall -g claude-yo\n');
     return 0;
   } finally {
     if (rl) rl.close();

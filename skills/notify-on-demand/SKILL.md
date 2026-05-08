@@ -1,11 +1,11 @@
 ---
 name: notify-on-demand
-description: Send a push notification via claude-watch-notify when the user explicitly asks to be pinged, notified, or alerted when a task finishes. Trigger phrases include "ping me", "notify me when done", "let me know when this finishes", "alert me", and Turkish equivalents like "bitince haber ver", "tamam olunca bildir", "haber et".
+description: Send a push notification via claude-yo when the user explicitly asks to be pinged, notified, or alerted when a task finishes. Trigger phrases include "ping me", "notify me when done", "let me know when this finishes", "alert me", and Turkish equivalents like "bitince haber ver", "tamam olunca bildir", "haber et".
 ---
 
 # Notify on demand
 
-This skill sends a one-shot push notification through the `claude-watch-notify`
+This skill sends a one-shot push notification through the `claude-yo`
 CLI. **Use it only when the user explicitly asks** to be pinged.
 
 ## When to invoke
@@ -25,7 +25,7 @@ After completing the work the user asked for, and **right before your final
 text reply for the turn**, run this Bash command:
 
 ```bash
-claude-watch-notify ping --message "<one-line summary, ≤100 chars>"
+claude-yo ping --message "<one-line summary, ≤100 chars>"
 ```
 
 You can optionally pass `--title "<short title>"` to override the default
@@ -42,17 +42,17 @@ for the noisiest tier.
   "done"; prefer "build succeeded, deploy URL: …" over "task complete".
 - Do not include secrets, tokens, or long error stacks in the message. Keep
   it short.
-- If `claude-watch-notify` is not installed (the Bash call exits with
+- If `claude-yo` is not installed (the Bash call exits with
   `command not found`), say so once and continue without pinging.
 - Don't ping for trivial responses (yes/no answers, simple confirmations).
 
 ## Examples
 
 User: "Run the test suite and ping me when it's done."
-You: (run tests) → `claude-watch-notify ping --message "Tests passed: 107/107"` → final reply.
+You: (run tests) → `claude-yo ping --message "Tests passed: 107/107"` → final reply.
 
 User: "Bu refactor'ı bitirdiğinde haber ver."
-You: (do refactor) → `claude-watch-notify ping --message "Refactor done, 4 files changed"` → final reply.
+You: (do refactor) → `claude-yo ping --message "Refactor done, 4 files changed"` → final reply.
 
 User: "What's 2+2?"
 You: "4." (no ping — user didn't ask, and it's a trivial answer.)

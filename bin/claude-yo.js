@@ -54,25 +54,25 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  process.stdout.write(`claude-watch-notify - push notifications for Claude Code
+  process.stdout.write(`claude-yo - push notifications for Claude Code
 
 Usage:
-  claude-watch-notify setup                 One-shot init + (skill or hooks) + test
-  claude-watch-notify init                  Interactive config setup
-  claude-watch-notify ping [--message TXT]  Send a one-shot notification (used by the skill)
-  claude-watch-notify arm [--message TXT]   Arm: next hook fires once (only in armed mode)
-  claude-watch-notify disarm                Clear armed state
-  claude-watch-notify arm-status            Show whether the system is currently armed
-  claude-watch-notify mode [name]           Show or switch mode (on-demand | armed | always)
-  claude-watch-notify install-hooks         Auto-merge hook block into ~/.claude/settings.json
-  claude-watch-notify install-skill         Install the notify-on-demand skill
-  claude-watch-notify uninstall             Remove hooks, skill, armed flag, and config
-  claude-watch-notify test                  Send a test notification
-  claude-watch-notify doctor [--skip-send]  Check config, mode, hooks/skill, connectivity
-  claude-watch-notify --event Stop          Used by Claude Code hooks (stdin = JSON)
-  claude-watch-notify --dry-run             Print the request without sending
-  claude-watch-notify --help                Show this help
-  claude-watch-notify --version             Show version
+  claude-yo setup                 One-shot init + (skill or hooks) + test
+  claude-yo init                  Interactive config setup
+  claude-yo ping [--message TXT]  Send a one-shot notification (used by the skill)
+  claude-yo arm [--message TXT]   Arm: next hook fires once (only in armed mode)
+  claude-yo disarm                Clear armed state
+  claude-yo arm-status            Show whether the system is currently armed
+  claude-yo mode [name]           Show or switch mode (on-demand | armed | always)
+  claude-yo install-hooks         Auto-merge hook block into ~/.claude/settings.json
+  claude-yo install-skill         Install the notify-on-demand skill
+  claude-yo uninstall             Remove hooks, skill, armed flag, and config
+  claude-yo test                  Send a test notification
+  claude-yo doctor [--skip-send]  Check config, mode, hooks/skill, connectivity
+  claude-yo --event Stop          Used by Claude Code hooks (stdin = JSON)
+  claude-yo --dry-run             Print the request without sending
+  claude-yo --help                Show this help
+  claude-yo --version             Show version
 
 Modes:
   on-demand  Notifications fire only via "ping" (or the notify-on-demand skill). Default.

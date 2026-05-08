@@ -11,7 +11,7 @@ import {
 } from '../src/armState.js';
 
 async function withTempDir(fn) {
-  const dir = await mkdtemp(join(tmpdir(), 'cwn-arm-'));
+  const dir = await mkdtemp(join(tmpdir(), 'cyo-arm-'));
   try {
     return await fn(dir);
   } finally {

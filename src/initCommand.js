@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { DEFAULT_CONFIG, DEFAULT_CONFIG_PATH, saveConfig } from './config.js';
 
 function suggestTopic() {
-  return 'cwn-' + randomBytes(8).toString('hex');
+  return 'cyo-' + randomBytes(8).toString('hex');
 }
 
 async function ask(rl, prompt, defaultValue) {
@@ -82,7 +82,7 @@ function settingsSnippet() {
             hooks: [
               {
                 type: 'command',
-                command: 'claude-watch-notify --event Stop',
+                command: 'claude-yo --event Stop',
                 timeout: 8,
               },
             ],
@@ -94,7 +94,7 @@ function settingsSnippet() {
             hooks: [
               {
                 type: 'command',
-                command: 'claude-watch-notify --event Notification',
+                command: 'claude-yo --event Notification',
                 timeout: 8,
               },
             ],
@@ -138,33 +138,33 @@ function postInstallHints(provider, providerCfg, mode = 'on-demand') {
     output.write(
       `  3. Install the on-demand skill so Claude can ping you when you ask:\n`,
     );
-    output.write(`       claude-watch-notify install-skill\n`);
+    output.write(`       claude-yo install-skill\n`);
     output.write(
       `     Then in chat just say "ping me when this is done" and Claude will run\n` +
-        `     "claude-watch-notify ping" automatically at the end.\n`,
+        `     "claude-yo ping" automatically at the end.\n`,
     );
   } else {
     output.write(
-      `  3. Install the Claude Code hook automatically: claude-watch-notify install-hooks\n`,
+      `  3. Install the Claude Code hook automatically: claude-yo install-hooks\n`,
     );
     output.write(`     (or paste the snippet below into ~/.claude/settings.json):\n\n`);
     output.write(settingsSnippet() + '\n\n');
     if (mode === 'armed') {
       output.write(
-        `     Mode "armed": run "claude-watch-notify arm" before a long task; the next hook fires once.\n`,
+        `     Mode "armed": run "claude-yo arm" before a long task; the next hook fires once.\n`,
       );
     }
   }
   output.write(
-    `  4. Send a test notification: claude-watch-notify test\n`,
+    `  4. Send a test notification: claude-yo test\n`,
   );
 }
 
 export async function runInit() {
   const rl = createInterface({ input, output });
-  output.write('claude-watch-notify init\n\n');
+  output.write('claude-yo init\n\n');
   output.write(
-    'This will create ~/.claude-watch-notify.json with your notification provider settings.\n\n',
+    'This will create ~/.claude-yo.json with your notification provider settings.\n\n',
   );
 
   try {

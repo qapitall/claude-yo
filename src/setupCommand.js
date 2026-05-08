@@ -6,7 +6,7 @@ import { loadConfig } from './config.js';
 
 export async function runSetup() {
   process.stdout.write(
-    'claude-watch-notify setup — runs init, installs hook/skill for the chosen mode, then sends a test.\n\n',
+    'claude-yo setup — runs init, installs hook/skill for the chosen mode, then sends a test.\n\n',
   );
 
   const initCode = await runInit();
@@ -38,7 +38,7 @@ export async function runSetup() {
   const testCode = await runTest();
   if (testCode !== 0) {
     process.stdout.write(
-      '\ntest notification failed. Run "claude-watch-notify doctor" to diagnose.\n',
+      '\ntest notification failed. Run "claude-yo doctor" to diagnose.\n',
     );
     return testCode;
   }
@@ -50,7 +50,7 @@ export async function runSetup() {
     );
   } else if (mode === 'armed') {
     process.stdout.write(
-      `Tip: run "claude-watch-notify arm" before a long task; the next hook fires once.\n`,
+      `Tip: run "claude-yo arm" before a long task; the next hook fires once.\n`,
     );
   }
   return 0;

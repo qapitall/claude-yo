@@ -5,7 +5,7 @@ import { listProviders, validateProviderConfig } from './providers.js';
 
 export const DEFAULT_CONFIG_PATH = join(
   homedir(),
-  '.claude-watch-notify.json',
+  '.claude-yo.json',
 );
 
 export const VALID_MODES = ['on-demand', 'armed', 'always'];

@@ -24,7 +24,7 @@ export async function runMode({ target } = {}) {
   }
   if (!cfg.ok) {
     process.stderr.write(
-      `✗ no config yet — run "claude-watch-notify init" first.\n`,
+      `✗ no config yet — run "claude-yo init" first.\n`,
     );
     return 1;
   }
@@ -33,11 +33,11 @@ export async function runMode({ target } = {}) {
   process.stdout.write(`✓ mode set to "${target}"\n`);
   if (target === 'on-demand') {
     process.stdout.write(
-      `   Notifications fire only when invoked via "claude-watch-notify ping" (or via the notify-on-demand skill).\n`,
+      `   Notifications fire only when invoked via "claude-yo ping" (or via the notify-on-demand skill).\n`,
     );
   } else if (target === 'armed') {
     process.stdout.write(
-      `   Notifications fire only after "claude-watch-notify arm"; the next hook fires once and disarms.\n`,
+      `   Notifications fire only after "claude-yo arm"; the next hook fires once and disarms.\n`,
     );
   } else {
     process.stdout.write(

@@ -11,7 +11,7 @@ import {
 } from '../src/config.js';
 
 async function withTempDir(fn) {
-  const dir = await mkdtemp(join(tmpdir(), 'cwn-cfg-'));
+  const dir = await mkdtemp(join(tmpdir(), 'cyo-cfg-'));
   try {
     return await fn(dir);
   } finally {

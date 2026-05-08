@@ -9,7 +9,7 @@ import {
 } from '../src/transcriptReader.js';
 
 async function withTempFile(contents, fn) {
-  const dir = await mkdtemp(join(tmpdir(), 'cwn-'));
+  const dir = await mkdtemp(join(tmpdir(), 'cyo-'));
   const path = join(dir, 'transcript.jsonl');
   await writeFile(path, contents);
   try {

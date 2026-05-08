@@ -1,17 +1,17 @@
 {
-  "name": "claude-watch-notify",
+  "name": "claude-yo",
   "version": "0.1.0",
   "description": "Push notifications when Claude Code finishes a task. Sends via ntfy, Discord, or Telegram — only when you ask for it.",
   "type": "module",
   "bin": {
-    "claude-watch-notify": "./bin/claude-watch-notify.js"
+    "claude-yo": "./bin/claude-yo.js"
   },
   "engines": {
     "node": ">=18"
   },
   "scripts": {
     "test": "node --test \"test/*.test.js\"",
-    "start": "node bin/claude-watch-notify.js"
+    "start": "node bin/claude-yo.js"
   },
   "files": [
     "bin/",

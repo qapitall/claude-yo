@@ -1,4 +1,4 @@
-# claude-watch-notify
+# claude-yo
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Node ≥18](https://img.shields.io/badge/node-%E2%89%A518-339933?style=flat-square&logo=node.js&logoColor=white)
@@ -18,7 +18,7 @@ After a one-time setup, in any Claude Code conversation you can just say:
 
 > "Run the test suite and **ping me when it's done**."
 
-Claude does the work. Right before it sends its final reply, it quietly runs `claude-watch-notify ping` once. Your phone pops a notification:
+Claude does the work. Right before it sends its final reply, it quietly runs `claude-yo ping` once. Your phone pops a notification:
 
 > **✓ Tests passed**
 
@@ -27,23 +27,23 @@ That's it. No buzz on short answers, no extra subscriptions, no babysitting.
 ## 🚀 Get started
 
 ```bash
-npm install -g claude-watch-notify
-claude-watch-notify setup
+npm install -g claude-yo
+claude-yo setup
 ```
 
 `setup` asks a handful of questions — pick a mode, pick a provider, paste a token or topic — then sends a real test notification so you can confirm everything works.
 
 > [!TIP]
-> Stuck? `claude-watch-notify doctor` shows a green/red checklist of what's broken.
+> Stuck? `claude-yo doctor` shows a green/red checklist of what's broken.
 
 ## 🎛️ How notifications fire (three modes)
 
-You pick one of these during `setup`. Switch any time with `claude-watch-notify mode <name>`.
+You pick one of these during `setup`. Switch any time with `claude-yo mode <name>`.
 
 | Mode | When notifications fire | When to pick it |
 |---|---|---|
 | 🟢 **on-demand** *(default)* | Only when Claude runs `ping` — which it does when you ask ("ping me when…"). | Most people. Zero noise. |
-| 🟡 **armed** | Only after you run `claude-watch-notify arm`. The next task-end fires once and clears itself. | Long tasks where you don't want to rely on Claude remembering. |
+| 🟡 **armed** | Only after you run `claude-yo arm`. The next task-end fires once and clears itself. | Long tasks where you don't want to rely on Claude remembering. |
 | 🔴 **always** | On every Stop/Notification hook. Filtered by `minDurationSeconds` and quiet hours. | Power users who want every-task pings. |
 
 ## 📡 Pick a provider
@@ -58,7 +58,7 @@ Detailed steps for each below.
 
 ### ntfy
 
-1. `claude-watch-notify init` and choose `ntfy`. It suggests a long random topic name like `cwn-a3b7f9e2c1d4e8f6`.
+1. `claude-yo init` and choose `ntfy`. It suggests a long random topic name like `cyo-a3b7f9e2c1d4e8f6`.
 2. Install the **ntfy** app on your phone:
 
    <p>
@@ -80,12 +80,12 @@ For private channels, get an [ntfy access token](https://docs.ntfy.sh/config/#ac
 1. In Telegram, talk to **[@BotFather](https://t.me/BotFather)**. Send `/newbot`, pick a name. It hands you a bot token that looks like `123456789:ABCdef...`.
 2. Send `/start` to your new bot so it's allowed to message you back.
 3. Find your **chat ID**. Easiest path: send a message to **@userinfobot**, it tells you. (Or visit `https://api.telegram.org/bot<TOKEN>/getUpdates` and find `"chat":{"id":...}`.)
-4. `claude-watch-notify init`, choose `telegram`, paste both.
+4. `claude-yo init`, choose `telegram`, paste both.
 
 ### Discord
 
 1. Open a Discord server channel you control. **Edit Channel → Integrations → Webhooks → New Webhook → Copy Webhook URL**.
-2. `claude-watch-notify init`, choose `discord`, paste the URL.
+2. `claude-yo init`, choose `discord`, paste the URL.
 
 > [!NOTE]
 > No server? Discord lets you [make one in a minute](https://support.discord.com/hc/en-us/articles/204849977) — empty, no members, no problem.
@@ -106,7 +106,7 @@ A few more exist (`init`, `install-skill`, `install-hooks`, `disarm`, `arm-statu
 
 ## ⚙️ Configuration
 
-The config lives at `~/.claude-watch-notify.json`. `init` writes it for you, but you can edit it by hand any time.
+The config lives at `~/.claude-yo.json`. `init` writes it for you, but you can edit it by hand any time.
 
 | Path | Default | Meaning |
 |---|---|---|
@@ -128,25 +128,25 @@ The config lives at `~/.claude-watch-notify.json`. `init` writes it for you, but
 
 ## 🩹 When something doesn't work
 
-Start with `claude-watch-notify doctor` — it usually points you at the broken step.
+Start with `claude-yo doctor` — it usually points you at the broken step.
 
-**No notification at all.** Try `claude-watch-notify test --dry-run` to see exactly what would be sent. The URL, headers, and body should look reasonable. Then drop the `--dry-run` to actually send. If dry-run looks correct but the live send fails, something in your provider config (token, URL, chat ID) is wrong.
+**No notification at all.** Try `claude-yo test --dry-run` to see exactly what would be sent. The URL, headers, and body should look reasonable. Then drop the `--dry-run` to actually send. If dry-run looks correct but the live send fails, something in your provider config (token, URL, chat ID) is wrong.
 
 **Notification reaches one device but not another.** That's a provider-app setting on the receiving device — notification permission, mirroring rules, Do Not Disturb. The CLI's job ends once the provider accepts the message.
 
-**Hooks never fire.** Run Claude Code with `claude --debug` and watch for hook output. Make sure `claude-watch-notify` is on the `PATH` Claude Code sees. Re-running `claude-watch-notify install-hooks` is usually the fix.
+**Hooks never fire.** Run Claude Code with `claude --debug` and watch for hook output. Make sure `claude-yo` is on the `PATH` Claude Code sees. Re-running `claude-yo install-hooks` is usually the fix.
 
 **Notifications at 3 AM.** Set `quietHours.enabled: true` and pick a window. Set `allowHighPriority: false` too if you want to silence input-needed alerts during quiet hours.
 
 ## 🗑️ Removing it
 
 ```bash
-claude-watch-notify uninstall          # asks per item
-claude-watch-notify uninstall --yes    # nukes everything without prompting
-npm uninstall -g claude-watch-notify   # the binary itself
+claude-yo uninstall          # asks per item
+claude-yo uninstall --yes    # nukes everything without prompting
+npm uninstall -g claude-yo   # the binary itself
 ```
 
-`uninstall` only removes hooks it installed (any `command` containing `claude-watch-notify`); anything else in your `~/.claude/settings.json` stays put. It also leaves `*.backup-*` files behind in case you want to undo.
+`uninstall` only removes hooks it installed (any `command` containing `claude-yo`); anything else in your `~/.claude/settings.json` stays put. It also leaves `*.backup-*` files behind in case you want to undo.
 
 ## 🔒 Security
 
@@ -160,8 +160,8 @@ npm uninstall -g claude-watch-notify   # the binary itself
 Issues and PRs welcome — the project is small on purpose, no runtime dependencies.
 
 ```bash
-git clone https://github.com/<your-fork>/claude-watch-notify
-cd claude-watch-notify
+git clone https://github.com/<your-fork>/claude-yo
+cd claude-yo
 ```
 
 ## 📄 License

@@ -2,7 +2,7 @@
   "mode": "on-demand",
   "provider": "ntfy",
   "ntfy": {
-    "topic": "cwn-replace-with-your-long-random-topic",
+    "topic": "cyo-replace-with-your-long-random-topic",
     "server": "https://ntfy.sh",
     "authToken": null
   },

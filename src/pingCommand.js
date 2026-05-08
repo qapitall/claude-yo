@@ -20,7 +20,7 @@ export async function runPing({
   if (!cfg.ok) {
     process.stderr.write(`✗ ${cfg.reason}\n`);
     process.stderr.write(
-      `Run "claude-watch-notify init" to create a config first.\n`,
+      `Run "claude-yo init" to create a config first.\n`,
     );
     return 1;
   }

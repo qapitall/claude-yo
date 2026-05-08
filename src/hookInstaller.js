@@ -20,7 +20,7 @@ function buildHookEntry(eventName) {
     hooks: [
       {
         type: 'command',
-        command: `claude-watch-notify --event ${eventName}`,
+        command: `claude-yo --event ${eventName}`,
         timeout: 8,
       },
     ],
@@ -34,7 +34,7 @@ function entryAlreadyInstalled(matcherEntry) {
     (h) =>
       isPlainObject(h) &&
       typeof h.command === 'string' &&
-      h.command.includes('claude-watch-notify'),
+      h.command.includes('claude-yo'),
   );
 }
 
@@ -42,7 +42,7 @@ function isCwnHook(h) {
   return (
     isPlainObject(h) &&
     typeof h.command === 'string' &&
-    h.command.includes('claude-watch-notify')
+    h.command.includes('claude-yo')
   );
 }
 
@@ -95,7 +95,7 @@ export function planUninstall(existingSettings) {
       changes.push({
         event: ev,
         action: 'kept',
-        reason: 'no claude-watch-notify entry found',
+        reason: 'no claude-yo entry found',
       });
     } else {
       if (filtered.length === 0) delete settings.hooks[ev];
@@ -200,7 +200,7 @@ export async function uninstallHooks({
   }
 
   if (!removedAny) {
-    out.write(`\n✓ No claude-watch-notify hooks found; nothing to remove.\n`);
+    out.write(`\n✓ No claude-yo hooks found; nothing to remove.\n`);
     return { ok: true, changed: false };
   }
 

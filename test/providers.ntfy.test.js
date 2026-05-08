@@ -34,7 +34,7 @@ test('ntfy.validateConfig: accepts http server (self-host)', () => {
 
 test('ntfy.buildRequest: posts JSON to server root with topic in body', () => {
   const req = ntfy.buildRequest(
-    { topic: 'claude-watch-abc', server: 'https://ntfy.sh' },
+    { topic: 'cyo-abc', server: 'https://ntfy.sh' },
     {
       title: 'Hello',
       body: 'World',
@@ -44,7 +44,7 @@ test('ntfy.buildRequest: posts JSON to server root with topic in body', () => {
   );
   assert.equal(req.url, 'https://ntfy.sh/');
   const payload = parseBody(req);
-  assert.equal(payload.topic, 'claude-watch-abc');
+  assert.equal(payload.topic, 'cyo-abc');
   assert.equal(payload.title, 'Hello');
   assert.equal(payload.message, 'World');
   assert.equal(payload.priority, 4);
